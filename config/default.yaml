@@ -1,0 +1,9 @@
+btc:
+  rpc_host: "localhost:18443"
+  cookie_path: "/Users/ashwinprasad/Library/Application Support/Bitcoin/regtest/.cookie"
+  wallet_name: "legacy"
+opi:
+  version: "0.3.0"
+  port: "8787"
+  endpoints:
+    fetch_evts_by_inscription_id: "/v1/brc20/event"
