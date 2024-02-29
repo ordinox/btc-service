@@ -1,0 +1,12 @@
+btc:
+  rpc_host: "localhost:18443"
+  cookie_path: "/Users/ashwinprasad/Library/Application Support/Bitcoin/regtest/.cookie"
+  wallet_name: "legacy" # Wallet name with legacy support on bitcoin-core
+  ord_path: "/Users/ashwinprasad/Projects/btc/OPX/ord/target/release"
+
+opi:
+  version: "0.3.0"
+  port: "8787"
+  endpoints:
+    fetch_evts_by_inscription_id: "/v1/brc20/event"
+    fetch_balance: "/v1/brc20/get_current_balance_of_wallet"

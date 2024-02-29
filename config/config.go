@@ -28,6 +28,7 @@ type (
 		CookiePath  string `mapstructure:"cookie_path"`
 		WalletName  string `mapstructure:"wallet_name"`
 		ChainConfig string `mapstructure:"chain_cfg"`
+		OrdPath     string `mapstructure:"ord_path"`
 	}
 
 	OpiConfig struct {
