@@ -11,9 +11,9 @@ func Execute() {
 		Short: "cli for interacting with tokens on bitcoin",
 	}
 
-	config := config.GetDefaultConfig().BtcConfig
+	config := config.GetDefaultConfig()
 
-	root.AddCommand(brc20Cmd(config), getKeyPairCmd())
+	root.AddCommand(brc20Cmd(config), getKeyPairCmd(), genBlocksCmd(config.BtcConfig))
 	err := root.Execute()
 	if err != nil {
 		panic(err)

@@ -5,6 +5,7 @@ package brc20
 // 2. build txn for signing
 // 3. with a transaction id, check if a brc20 token came into the address being monitored
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/btcsuite/btcd/btcec/v2"
@@ -16,8 +17,89 @@ import (
 	"github.com/ordinox/btc-service/client"
 	"github.com/ordinox/btc-service/common"
 	"github.com/ordinox/btc-service/config"
+	"github.com/ordinox/btc-service/inscriptions"
 	"github.com/rs/zerolog/log"
 )
+
+type transfer struct {
+	P    string `json:"p"`
+	Op   string `json:"op"`
+	Tick string `json:"tick"`
+	Amt  string `json:"amt"`
+}
+
+func InscribeTransfer(ticker string, from btcutil.Address, amt uint, config config.Config) (*inscriptions.InscriptionResultRaw, error) {
+	transfer := transfer{
+		P:    "brc-20",
+		Op:   "transfer",
+		Tick: ticker,
+		Amt:  fmt.Sprintf("%d", amt),
+	}
+	bz, _ := json.Marshal(transfer)
+	return inscriptions.Inscribe(string(bz), from.String(), config.BtcConfig)
+
+	client := client.NewBitcoinClient(config)
+	err := client.ImportAddress(from.String())
+	if err != nil {
+		log.Err(err).Msg("error importing address for tracking")
+		return nil, err
+	}
+	utxos, err := client.GetUtxos(from)
+	if err != nil {
+		log.Err(err).Msgf("error getting utxos for address: %s", from.String())
+	}
+	cardinal := btcjson.ListUnspentResult{}
+	_ = cardinal
+	for _, utxo := range utxos {
+		fmt.Println(utxo.TxID)
+		if utxo.Amount == 546e-8 {
+			// Then this is an inscription
+			continue
+		}
+		// First non-inscription
+		cardinal = utxo
+	}
+	return nil, nil
+
+}
+
+func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint, privKey btcec.PrivateKey, config config.Config) (*string, error) {
+	client := client.NewBitcoinClient(config)
+	utxos, err := client.GetUtxos(from)
+	if err != nil {
+		return nil, err
+	}
+	inscriptionTxId := inscriptionId[:len(inscriptionId)-2]
+	var inscriptionUtxo *btcjson.ListUnspentResult
+	var feeUtxo *btcjson.ListUnspentResult
+	for i := range utxos {
+		utxo := utxos[i]
+		if feeUtxo != nil && inscriptionUtxo != nil {
+			break
+		}
+		if utxo.Amount == 546e-8 && inscriptionTxId == utxo.TxID {
+			inscriptionUtxo = &utxo
+		} else if utxo.Amount > 10000e-8 {
+			feeUtxo = &utxo
+		}
+	}
+	if inscriptionUtxo == nil {
+		return nil, fmt.Errorf("inscription utxo not found")
+	}
+	if feeUtxo == nil {
+		return nil, fmt.Errorf("no fee utxo found")
+	}
+
+	err = Transfer(*feeUtxo, *inscriptionUtxo, from, to, &privKey, privKey.PubKey())
+	if err != nil {
+		return nil, err
+	}
+	res := "transfer complete"
+
+	// fmt.Println(hash.String())
+
+	return &res, nil
+}
 
 // Use UTXOs of the given wallet to transfer an inscription
 func Transfer(cUtxo, iUtxo btcjson.ListUnspentResult, sendderAddr, destAddr btcutil.Address, senderPk *btcec.PrivateKey, senderPubKey *btcec.PublicKey) error {
@@ -26,7 +108,7 @@ func Transfer(cUtxo, iUtxo btcjson.ListUnspentResult, sendderAddr, destAddr btcu
 		log.Err(err).Msg("error building MsgTx")
 		return err
 	}
-	pkData := senderPubKey.SerializeUncompressed()
+	pkData := senderPubKey.SerializeCompressed()
 	sigHash0, err := tx.SigHash(0)
 	if err != nil {
 		log.Err(err).Msg("error generating sighash0")
@@ -57,7 +139,7 @@ func Transfer(cUtxo, iUtxo btcjson.ListUnspentResult, sendderAddr, destAddr btcu
 	tx.TxIn[0].SignatureScript = sigScript0
 	tx.TxIn[1].SignatureScript = sigScript1
 
-	client := client.CreateBitcoinClient(config.GetDefaultConfig())
+	client := client.NewBitcoinClient(config.GetDefaultConfig())
 	h, err := client.SendRawTransaction(tx.MsgTx, true)
 	if err != nil {
 		log.Err(err).Msg("error broadcasting txn")

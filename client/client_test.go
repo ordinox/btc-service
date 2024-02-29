@@ -16,7 +16,7 @@ var _ = fmt.Println
 func TestUtxo(t *testing.T) {
 	addr, err := btcutil.DecodeAddress("mtgNH1MPY5QeGobaZXidMvY3dhRjow2AS8", &chaincfg.RegressionNetParams)
 	assert.Nil(t, err)
-	client := CreateBitcoinClient(config.GetDefaultConfig())
+	client := NewBitcoinClient(config.GetDefaultConfig())
 	utxos, err := client.GetUtxos(addr)
 	assert.Nil(t, err)
 	fmt.Println(len(utxos))

@@ -28,7 +28,7 @@ func Inscribe(inscription, destination string, config config.BtcConfig) (*Inscri
 		log.Error().Msgf("Error writing inscription to the temp file - %s", err)
 		return nil, err
 	}
-	args := []string{config.GetOrdChainConfigFlag(), "wallet", "inscribe", "--fee-rate", fmt.Sprintf("%d", fee), "--destination", destination, "--file", file.Name(), "--postage", "546sat"}
+	args := []string{config.GetOrdChainConfigFlag(), "--bitcoin-data-dir", config.BitcoinDataDir, "--data-dir", config.OrdDataDir, "wallet", "inscribe", "--fee-rate", fmt.Sprintf("%d", fee), "--destination", destination, "--file", file.Name(), "--postage", "546sat"}
 	cmd := execute.ExecTask{
 		Command:     strings.TrimRight(config.OrdPath, "/") + "/ord",
 		Args:        args,

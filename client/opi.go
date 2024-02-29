@@ -16,9 +16,9 @@ type (
 		config   config.OpiConfig
 	}
 
-	GetEventsByInscriptionIdResponse struct {
-		Error  any          `json:"error"`
-		Result []Brc20Event `json:"result"`
+	Response[T any] struct {
+		Error  any `json:"error"`
+		Result T   `json:"result"`
 	}
 
 	Brc20Event struct {
@@ -30,6 +30,12 @@ type (
 		UsingTxID      string `json:"using_tx_id,omitempty"`
 		SpentWallet    string `json:"spent_wallet,omitempty"`
 		SpentPkScript  string `json:"spent_pkScript,omitempty"`
+	}
+
+	Brc20Balance struct {
+		OverallBalance   string `json:"overall_balance"`
+		AvailableBalance string `json:"available_balance"`
+		BlockHeight      int    `json:"block_height"`
 	}
 )
 
@@ -72,7 +78,7 @@ func getRequest(endpoint string) ([]byte, error) {
 
 func (c OpiClient) GetEventsByInscriptionId(inscriptionId string) ([]Brc20Event, error) {
 	endpoint := fmt.Sprintf("%s%s?inscription_id=%s", c.endpoint, c.config.Endpoints.FetchEventsByInscriptionId, inscriptionId)
-	data := GetEventsByInscriptionIdResponse{}
+	data := Response[[]Brc20Event]{}
 	bodyBytes, err := getRequest(endpoint)
 	if err != nil {
 		return nil, err
@@ -85,10 +91,16 @@ func (c OpiClient) GetEventsByInscriptionId(inscriptionId string) ([]Brc20Event,
 	return data.Result, nil
 }
 
-func (c OpiClient) GetBalance(address, ticker string) {
+func (c OpiClient) GetBalance(address, ticker string) (*Brc20Balance, error) {
 	endpoint := fmt.Sprintf("%s%s?address=%s&ticker=%s", c.endpoint, c.config.Endpoints.FetchBalance, address, ticker)
 	bodyBytes, err := getRequest(endpoint)
+	data := Response[Brc20Balance]{}
 	if err != nil {
+		return nil, err
 	}
-	_ = bodyBytes
+	if err := json.Unmarshal(bodyBytes, &data); err != nil {
+		log.Err(err).Msgf("error unmarshalling response: [resp = %s]", string(bodyBytes))
+		return nil, err
+	}
+	return &data.Result, nil
 }

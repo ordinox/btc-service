@@ -40,7 +40,7 @@ func TestTransf(t *testing.T) {
 	fmt.Println("Sender", senderAddr.EncodeAddress())
 	fmt.Println("Destination", destinationAddr.EncodeAddress())
 
-	client := client.CreateBitcoinClient(config.GetDefaultConfig())
+	client := client.NewBitcoinClient(config.GetDefaultConfig())
 	utxos, err := client.GetUtxos(senderAddr)
 	for _, utxo := range utxos {
 		fmt.Printf("%s - %f\n", utxo.TxID, utxo.Amount)

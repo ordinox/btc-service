@@ -24,11 +24,13 @@ type (
 	}
 
 	BtcConfig struct {
-		RpcHost     string `mapstructure:"rpc_host"`
-		CookiePath  string `mapstructure:"cookie_path"`
-		WalletName  string `mapstructure:"wallet_name"`
-		ChainConfig string `mapstructure:"chain_cfg"`
-		OrdPath     string `mapstructure:"ord_path"`
+		RpcHost        string `mapstructure:"rpc_host"`
+		CookiePath     string `mapstructure:"cookie_path"`
+		WalletName     string `mapstructure:"wallet_name"`
+		ChainConfig    string `mapstructure:"chain_cfg"`
+		OrdPath        string `mapstructure:"ord_path"`
+		BitcoinDataDir string `mapstructure:"bitcoin_data_dir"`
+		OrdDataDir     string `mapstructure:"ord_data_dir"`
 	}
 
 	OpiConfig struct {

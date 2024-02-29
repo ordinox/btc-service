@@ -15,7 +15,7 @@ type BtcRpcClient struct {
 	TrackedAddreses map[string]bool
 }
 
-func CreateBitcoinClient(config config.Config) *BtcRpcClient {
+func NewBitcoinClient(config config.Config) *BtcRpcClient {
 	connConfig := &rpcclient.ConnConfig{
 		Host:         config.BtcConfig.GetRpcHostWithWallet(),
 		HTTPPostMode: true, // Bitcoin Core

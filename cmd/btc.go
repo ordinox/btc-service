@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 
+	"github.com/alexellis/go-execute/v2"
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/ordinox/btc-service/config"
@@ -30,6 +33,42 @@ func getKeyPairCmd() *cobra.Command {
 			fmt.Println()
 			fmt.Println("PrivKeyHex: ", privKey)
 			fmt.Println()
+		},
+	}
+	return &cmd
+}
+
+func genBlocksCmd(config config.BtcConfig) *cobra.Command {
+	cmd := cobra.Command{
+		Use:   "genblocks [amt] [address]",
+		Short: "generate regtest blocks",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			amt := 10
+			addr := "n3uNm2T4TisRQd3TUmYSrENtbPWEhzqhC2"
+			if args[0] != "" {
+				amtP, err := strconv.Atoi(args[0])
+				if err != nil {
+					return err
+				}
+				amt = amtP
+			}
+			if args[1] != "" {
+				addrP, err := btcutil.DecodeAddress(args[1], config.GetChainConfigParams())
+				if err != nil {
+					return err
+				}
+				addr = addrP.EncodeAddress()
+			}
+			c := execute.ExecTask{
+				Command: "bitcoin-cli",
+				Args:    []string{"-regtest", "generatetoaddress", fmt.Sprintf("%d", amt), addr},
+			}
+			_, err := c.Execute(context.Background())
+			if err != nil {
+				return err
+			}
+			fmt.Println("blocks generated")
+			return nil
 		},
 	}
 	return &cmd
