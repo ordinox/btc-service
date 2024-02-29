@@ -3,6 +3,8 @@ btc:
   cookie_path: "/Users/ashwinprasad/Library/Application Support/Bitcoin/regtest/.cookie"
   wallet_name: "legacy" # Wallet name with legacy support on bitcoin-core
   ord_path: "/Users/ashwinprasad/Projects/btc/OPX/ord/target/release"
+  bitcoin_data_dir: "/Users/ashwinprasad/Library/Application Support/Bitcoin"
+  ord_data_dir: "/Users/ashwinprasad/Projects/btc/OPX/ord/target/release"
 
 opi:
   version: "0.3.0"
