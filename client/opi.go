@@ -51,8 +51,7 @@ func NewOpiClient(c config.OpiConfig) *OpiClient {
 	}
 }
 
-func (c OpiClient) GetEventsByInscriptionId(inscriptionId string) ([]Brc20Event, error) {
-	endpoint := fmt.Sprintf("%s%s?inscription_id=%s", c.endpoint, c.config.Endpoints.FetchEventsByInscriptionId, inscriptionId)
+func getRequest(endpoint string) ([]byte, error) {
 	resp, err := http.Get(endpoint)
 	if err != nil {
 		log.Err(err).Msgf("error fetching events by inscription id [url = %s]", endpoint)
@@ -68,11 +67,28 @@ func (c OpiClient) GetEventsByInscriptionId(inscriptionId string) ([]Brc20Event,
 		log.Err(err).Msgf("http status not ok: [resp = %s]", string(bodyBytes))
 		return nil, err
 	}
+	return bodyBytes, nil
+}
+
+func (c OpiClient) GetEventsByInscriptionId(inscriptionId string) ([]Brc20Event, error) {
+	endpoint := fmt.Sprintf("%s%s?inscription_id=%s", c.endpoint, c.config.Endpoints.FetchEventsByInscriptionId, inscriptionId)
 	data := GetEventsByInscriptionIdResponse{}
+	bodyBytes, err := getRequest(endpoint)
+	if err != nil {
+		return nil, err
+	}
 	if err := json.Unmarshal(bodyBytes, &data); err != nil {
 		log.Err(err).Msgf("error unmarshalling response: [resp = %s]", string(bodyBytes))
 		return nil, err
 	}
 
 	return data.Result, nil
+}
+
+func (c OpiClient) GetBalance(address, ticker string) {
+	endpoint := fmt.Sprintf("%s%s?address=%s&ticker=%s", c.endpoint, c.config.Endpoints.FetchBalance, address, ticker)
+	bodyBytes, err := getRequest(endpoint)
+	if err != nil {
+	}
+	_ = bodyBytes
 }

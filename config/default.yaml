@@ -7,3 +7,4 @@ opi:
   port: "8787"
   endpoints:
     fetch_evts_by_inscription_id: "/v1/brc20/event"
+    fetch_balance: "/v1/brc20/get_current_balance_of_wallet"
