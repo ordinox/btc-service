@@ -16,7 +16,7 @@ Primarily built to help with Ordinox development and testing. The objective is a
 
 1. Deploy a token
    `./btc-service brc20 inscribe-deploy [TOKEN] [SUPPLY] [ADDRESS]`
-   This will deploy a token [TOKEN] with the supply of [SUPPLY]. The address given sends the inscription to that address.
+   This will deploy a token [TOKEN] with the supply of [SUPPLY]. The given address is now the deployer of the token.
    Note: This does not mean that the address has these tokens now. They still need to be minted.
 
 2. Mint a token
@@ -27,9 +27,10 @@ Primarily built to help with Ordinox development and testing. The objective is a
 
 3. Transfer a token
    This involves 2 steps.
+
    a. Inscribing a transfer inscription to the desired wallet address
    `./btc-service brc20 inscribe-transfer [FROM_ADDRESS] [TOKEN] [AMT]`
-   This will inscribe a transfer inscription into the given wallet. This inscription is valid only if the given address actually has a balance of the [amt] number of tokens
+   This will inscribe a transfer inscription into the given wallet. This inscription is valid only if the given address actually has a balance of the [AMT] number of tokens
 
    b. Sending the transfer inscription to the desired wallet address
    Grab the inscriptionid from the previous output, and then feed it into this command
@@ -43,7 +44,7 @@ Make sure you generate some number of blocks before each step, or it will fail!
 You can do that with
 `./btc-service genblocks [AMT] [ADDRESS]`
 
-`genblocks` command basically mines the blockchain and received block rewards (freely on regtest)
+`genblocks` command basically mines the blockchain and receives block rewards (freely on regtest)
 but these block rewards are vested for 100 blocks. So it's recommended that you first generate 100 blocks and then mine 1 at a time to save db space
 
 It's also recommended that you genblocks into the address you want to transfer out Tokens/Inscriptions so that you have gas to pay towards the inscription transfer
