@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/alexellis/go-execute/v2"
 	"github.com/ordinox/btc-service/config"
@@ -32,6 +33,7 @@ func Inscribe(inscription, destination string, config config.BtcConfig) (*Inscri
 		Args:        args,
 		StreamStdio: false,
 	}
+	time.Sleep(time.Second * 1)
 	res, err := cmd.Execute(context.Background())
 	if err != nil {
 		log.Error().Msgf("Error sending inscription %s %v with err: %s", cmd.Command, cmd.Args, res.Stderr)
