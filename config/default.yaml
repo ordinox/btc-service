@@ -1,0 +1,14 @@
+---
+btc:
+ rpc_host: "localhost:18443"
+ cookie_path: "/home/ubuntu/.bitcoin/regtest"
+ wallet_name: "legacy"
+ ord_path: "/home/ubuntu/OPI/ord/target/release"
+ bitcoin_data_dir: "/home/ubuntu/.bitcoin"
+ ord_data_dir: "/home/ubuntu/OPI/ord/target/release"
+opi:
+ version: "0.3.0"
+ port: "8000"
+ endpoints:
+ fetch_evts_by_inscription_id: "/v1/brc20/event"
+ fetch_balance: "/v1/brc20/get_current_balance_of_wallet"
