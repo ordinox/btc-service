@@ -24,6 +24,7 @@ func brc20Cmd(config config.Config) *cobra.Command {
 		inscribeMintCmd(config.BtcConfig),
 		inscribeTransferCmd(config),
 		transferCmd(config),
+		e2eCmd(config),
 	)
 	return &brc20Cmd
 }

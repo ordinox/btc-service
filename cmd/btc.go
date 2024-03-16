@@ -73,3 +73,17 @@ func genBlocksCmd(config config.BtcConfig) *cobra.Command {
 	}
 	return &cmd
 }
+
+func generateBlocks() error {
+	amt := 10
+	addr := "n3uNm2T4TisRQd3TUmYSrENtbPWEhzqhC2"
+	c := execute.ExecTask{
+		Command: "bitcoin-cli",
+		Args:    []string{"-regtest", "generatetoaddress", fmt.Sprintf("%d", amt), addr},
+	}
+	_, err := c.Execute(context.Background())
+	if err != nil {
+		return err
+	}
+	return nil
+}
