@@ -17,7 +17,7 @@ var (
 	config       Config
 )
 
-func init() {
+func Init() {
 	viper.AutomaticEnv()
 	viper.AllowEmptyEnv(true)
 	viper.SetConfigType("yaml")

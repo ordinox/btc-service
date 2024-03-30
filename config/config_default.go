@@ -7,7 +7,7 @@ var (
 	config Config
 )
 
-func init() {
+func Init() {
 	config = Config{
 		BtcConfig: BtcConfig{
 			RpcHost:        "localhost:18443",
