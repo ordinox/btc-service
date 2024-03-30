@@ -9,6 +9,7 @@ import (
 	"github.com/alexellis/go-execute/v2"
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcutil"
+	"github.com/ordinox/btc-service/client"
 	"github.com/ordinox/btc-service/config"
 	"github.com/spf13/cobra"
 )
@@ -86,4 +87,28 @@ func generateBlocks() error {
 		return err
 	}
 	return nil
+}
+
+func GetBalance() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "utxos",
+		Short: "get utxos for a legacy",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client := client.NewBitcoinClient(config.GetDefaultConfig())
+			addr, err := btcutil.DecodeAddress(args[0], config.GetDefaultConfig().BtcConfig.GetChainConfigParams())
+			if err != nil {
+				return err
+			}
+			utxos, err := client.GetUtxos(addr)
+			if err != nil {
+				return err
+			}
+			for _, u := range utxos {
+				fmt.Println(u)
+			}
+			return nil
+		},
+	}
+	return cmd
 }
