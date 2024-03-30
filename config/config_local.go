@@ -14,6 +14,7 @@ import (
 var (
 	//go:embed local.yaml
 	localConfigB []byte
+	config       Config
 )
 
 func init() {

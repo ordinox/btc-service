@@ -3,27 +3,27 @@
 
 package config
 
-import (
-	"bytes"
-	_ "embed"
-	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
-)
-
 var (
-	//go:embed default.yaml
-	defaultConfigB []byte
+	config Config
 )
 
 func init() {
-	viper.AutomaticEnv()
-	viper.AllowEmptyEnv(true)
-	viper.SetConfigType("yaml")
-	if err := viper.ReadConfig(bytes.NewBuffer(defaultConfigB)); err != nil {
-		log.Err(err).Msg("unable to load default config")
-		panic("no config found")
-	}
-	if err := viper.Unmarshal(&config); err != nil {
-		log.Err(err).Msg("unable to unmarshal config")
+	config = Config{
+		BtcConfig: BtcConfig{
+			RpcHost:        "localhost:18443",
+			CookiePath:     "/home/ubuntu/.bitcoin/regtest",
+			WalletName:     "legacy",
+			OrdPath:        "/home/ubuntu/OPI/ord/target/release",
+			BitcoinDataDir: "/home/ubuntu/.bitcoin",
+			OrdDataDir:     "/home/ubuntu/OPI/ord/target/release",
+		},
+		OpiConfig: OpiConfig{
+			Version: "0.3.0",
+			Port:    "8000",
+			Endpoints: OpiEndpoints{
+				FetchEventsByInscriptionId: "/v1/brc20/event",
+				FetchBalance:               "/v1/brc20/get_current_balance_of_wallet",
+			},
+		},
 	}
 }

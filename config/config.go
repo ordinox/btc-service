@@ -7,8 +7,6 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 )
 
-var config Config
-
 func GetDefaultConfig() Config {
 	return config
 }
