@@ -52,7 +52,7 @@ func (r *BtcRpcClient) GetUtxos(addr btcutil.Address) ([]btcjson.ListUnspentResu
 		r.TrackedAddreses = make(map[string]bool)
 	}
 	if _, ok := r.TrackedAddreses[strings.ToLower(addr.String())]; !ok {
-		if err := r.ImportAddress(addr.String()); err != nil {
+		if err := r.ImportAddressRescan(addr.String(), "", false); err != nil {
 			return nil, err
 		}
 	}
