@@ -89,7 +89,7 @@ func generateBlocks() error {
 	return nil
 }
 
-func GetBalance() *cobra.Command {
+func getUtxosCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "utxos",
 		Short: "get utxos for a legacy",
