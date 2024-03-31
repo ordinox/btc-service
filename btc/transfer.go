@@ -31,8 +31,6 @@ func TransferBtc(
 		return err
 	}
 
-	fmt.Println("using utxo=", utxo.GetTxID())
-
 	tx := common.NewWrappedTx(rawTx, senderAddrScript)
 
 	utxo0, err := wire.NewOutPointFromString(fmt.Sprintf("%s:%d", utxo.GetTxID(), utxo.GetVout()))
@@ -40,37 +38,45 @@ func TransferBtc(
 		return err
 	}
 	fmt.Println("selected utxo: ", utxo.GetTxID())
+
 	dummySigScript := bytes.Repeat([]byte{0x00}, 105)
 	txin0 := wire.NewTxIn(utxo0, dummySigScript, [][]byte{})
 
 	tx.AddTxIn(txin0)
 	txout0 := wire.NewTxOut(int64(amtInSats), destinationAddrScript)
 	tx.AddTxOut(txout0)
-	// AmtInSats here is just a placeholder for calculating the size
-	txout1 := wire.NewTxOut(int64(amtInSats), senderAddrScript)
-	tx.AddTxOut(txout1)
+	// // AmtInSats here is just a placeholder for calculating the size
+	// txout1 := wire.NewTxOut(int64(amtInSats), senderAddrScript)
+	// tx.AddTxOut(txout1)
 
 	pkData := senderPrivKey.PubKey().SerializeCompressed()
 
-	var buf bytes.Buffer
-	err = tx.Serialize(&buf)
-	if err != nil {
-		fmt.Println("error serializing for size est")
-		return err
-	}
+	// var buf bytes.Buffer
+	// err = tx.Serialize(&buf)
+	// if err != nil {
+	// 	fmt.Println("error serializing for size est")
+	// 	return err
+	// }
 
-	totalFee := feeRate * uint32(buf.Len())
-	fmt.Println("total fee", totalFee)
+	// totalFee := feeRate * uint32(buf.Len())
+	// fmt.Println("total fee", totalFee)
 
 	// Now that we have the fee, replace the change txout
 	// change = total - amt - fee
+
+	totalFee, err := tx.EstimateGas(uint64(feeRate))
+	if err != nil {
+		return err
+	}
+
 	change := int64(utxo.GetValueInSats()) - int64(amtInSats) - int64(totalFee)
 	if change < 1 {
 		fmt.Printf("change [%d] = totalBal [%d] - amt [%d] - fee [%d]", change, utxo.GetValueInSats(), amtInSats, totalFee)
 		return fmt.Errorf("low balance")
 	}
 
-	tx.TxOut[1].Value = change
+	changeTxOut := wire.NewTxOut(int64(change), senderAddrScript)
+	tx.AddTxOut(changeTxOut)
 
 	sigHash0, err := tx.SigHash(0)
 	if err != nil {
@@ -96,5 +102,7 @@ func TransferBtc(
 	}
 
 	fmt.Println("TxHash", h.String())
+	fmt.Println("Fee Paid", totalFee)
+	fmt.Println("------")
 	return nil
 }

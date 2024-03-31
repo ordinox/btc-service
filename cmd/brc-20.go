@@ -16,9 +16,9 @@ import (
 
 func e2eCmd(config config.Config) *cobra.Command {
 	e2eCmd := cobra.Command{
-		Use:   "e2e [tokenName] [amt] [fromAddr] [toAddr] [privateKey]",
+		Use:   "e2e [tokenName] [amt] [fromAddr] [toAddr] [privateKey] [fee-rate]",
 		Short: "mint and transfer in one command [ONLY FOR REGTEST]",
-		Args:  cobra.ExactArgs(5),
+		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fromAddr, err := btcutil.DecodeAddress(args[2], config.BtcConfig.GetChainConfigParams())
 			if err != nil {
@@ -36,7 +36,13 @@ func e2eCmd(config config.Config) *cobra.Command {
 			if err != nil {
 				return err
 			}
+
 			privKey, _ := btcec.PrivKeyFromBytes(privKeyB)
+
+			feeRate, err := strconv.Atoi(args[5])
+			if err != nil {
+				return err
+			}
 
 			tokenName := args[0]
 
@@ -70,7 +76,7 @@ func e2eCmd(config config.Config) *cobra.Command {
 
 			fmt.Println("transferring inscription...")
 
-			res, err := brc20.TransferBrc20(fromAddr, toAddr, transferInscription, uint(amt), *privKey, config)
+			res, err := brc20.TransferBrc20(fromAddr, toAddr, transferInscription, uint(amt), *privKey, uint64(feeRate), config)
 			if err != nil {
 				return err
 			}
@@ -119,8 +125,13 @@ func transferCmd(config config.Config) *cobra.Command {
 			if err != nil {
 				return err
 			}
+
+			feeRate, err := strconv.Atoi(args[5])
+			if err != nil {
+				return err
+			}
 			privKey, _ := btcec.PrivKeyFromBytes(privKeyB)
-			res, err := brc20.TransferBrc20(fromAddr, toAddr, transferInscription, uint(amt), *privKey, config)
+			res, err := brc20.TransferBrc20(fromAddr, toAddr, transferInscription, uint(amt), *privKey, uint64(feeRate), config)
 			if err != nil {
 				return err
 			}
