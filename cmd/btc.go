@@ -102,7 +102,11 @@ func getUtxosCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				fmt.Println(utxos.Result)
+				for _, u := range utxos.Result {
+					fmt.Println("hash: ", u.TxHash)
+					fmt.Println("pos: ", u.TxPos)
+					fmt.Println("pos: ", u.Value)
+				}
 				return nil
 			}
 			client := client.NewBitcoinClient(config.GetDefaultConfig())
