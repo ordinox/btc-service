@@ -106,6 +106,7 @@ func getUtxosCmd() *cobra.Command {
 					fmt.Println("hash: ", u.TxHash)
 					fmt.Println("pos: ", u.TxPos)
 					fmt.Println("pos: ", u.Value)
+					fmt.Println("---------------")
 				}
 				return nil
 			}
