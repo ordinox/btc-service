@@ -15,7 +15,14 @@ func Execute() {
 
 	config := config.GetDefaultConfig()
 
-	root.AddCommand(brc20Cmd(config), getKeyPairCmd(), genBlocksCmd(config.BtcConfig), getUtxosCmd())
+	root.AddCommand(
+		brc20Cmd(config),
+		getKeyPairCmd(),
+		genBlocksCmd(config.BtcConfig),
+		getUtxosCmd(),
+		transferBtcCmd(config),
+		satsToBtcCmd(),
+	)
 	err := root.Execute()
 	if err != nil {
 		panic(err)

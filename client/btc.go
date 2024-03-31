@@ -1,7 +1,6 @@
 package client
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/btcsuite/btcd/btcutil"
@@ -66,7 +65,6 @@ func (r *BtcRpcClient) GetUtxos(addr btcutil.Address) ([]common.BtcUnspent, erro
 		return nil, err
 	}
 	utxos := make([]common.BtcUnspent, 0)
-	fmt.Println("UTXO Length", len(unspent))
 	for _, utxo := range unspent {
 		if utxo.Address == addr.String() {
 			utxos = append(utxos, common.NewBtcUnspent(utxo))

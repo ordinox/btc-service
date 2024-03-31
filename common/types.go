@@ -17,7 +17,7 @@ type WebUtxoResponse struct {
 type WebUtxo struct {
 	Height int    `json:"height"`
 	TxHash string `json:"tx_hash"`
-	Vout   uint64 `json:"tx_pos"`
+	Vout   uint32 `json:"tx_pos"`
 	Value  uint64 `json:"value"`
 }
 
@@ -25,7 +25,7 @@ func (w WebUtxo) GetTxID() string {
 	return w.TxHash
 }
 
-func (w WebUtxo) GetVout() uint64 {
+func (w WebUtxo) GetVout() uint32 {
 	return w.Vout
 }
 

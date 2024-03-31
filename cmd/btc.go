@@ -11,9 +11,27 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/ordinox/btc-service/btc"
 	"github.com/ordinox/btc-service/client"
+	"github.com/ordinox/btc-service/common"
 	"github.com/ordinox/btc-service/config"
 	"github.com/spf13/cobra"
 )
+
+func satsToBtcCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "sats",
+		Short: "convert sats to BTC",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			sats, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+			fmt.Printf("%f BTC\n", float64(sats)/100000000)
+			return nil
+		},
+	}
+	return cmd
+}
 
 func getKeyPair(config config.BtcConfig) (string, string) {
 	pk, _ := btcec.NewPrivateKey()
@@ -110,11 +128,11 @@ func getUtxosCmd() *cobra.Command {
 				}
 				return nil
 			}
-			client := client.NewBitcoinClient(config.GetDefaultConfig())
 			addr, err := btcutil.DecodeAddress(args[0], config.GetDefaultConfig().BtcConfig.GetChainConfigParams())
 			if err != nil {
 				return err
 			}
+			client := client.NewBitcoinClient(config.GetDefaultConfig())
 			utxos, err := client.GetUtxos(addr)
 			if err != nil {
 				return err
@@ -163,12 +181,43 @@ func transferBtcCmd(config config.Config) *cobra.Command {
 				return err
 			}
 			privKey, _ := btcec.PrivKeyFromBytes(privKeyB)
+			var selectedUtxo common.Utxo
+			if config.BtcConfig.ChainConfig == "mainnet" {
+				utxos, err := btc.GetUtxos(fromAddr.EncodeAddress())
+				if err != nil {
+					return err
+				}
+				for _, utxo := range utxos.Result {
+					if utxo.Value > uint64(amt) {
+						selectedUtxo = utxo
+						continue
+					}
+				}
+				if selectedUtxo == nil {
+					return fmt.Errorf("no valid utxo found for the amt. UTXO count=%d", len(utxos.Result))
+				}
+			} else {
+				client := client.NewBitcoinClient(config)
+				utxos, err := client.GetUtxos(fromAddr)
+				if err != nil {
+					return err
+				}
+				for _, u := range utxos {
+					if u.GetValueInSats() > uint64(amt) {
+						selectedUtxo = u
+						continue
+					}
+				}
+				if selectedUtxo == nil {
+					return fmt.Errorf("no valid utxo found for the amt. UTXO count=%d", len(utxos))
+				}
+			}
 
 			err = btc.TransferBtc(
 				*privKey,
 				fromAddr,
 				toAddr,
-				nil,
+				selectedUtxo,
 				uint64(amt),
 				uint32(feeRate),
 			)

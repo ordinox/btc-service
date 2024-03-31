@@ -13,3 +13,9 @@ type WrappedTx struct {
 func (tx *WrappedTx) SigHash(idx int) ([]byte, error) {
 	return txscript.CalcSignatureHash(tx.SenderPkScript, txscript.SigHashAll, tx.MsgTx, idx)
 }
+
+func NewWrappedTx(raw *wire.MsgTx, senderPkScript []byte) WrappedTx {
+	return WrappedTx{
+		raw, senderPkScript,
+	}
+}

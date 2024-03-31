@@ -21,7 +21,7 @@ func TransferBtc(
 	amtInSats uint64,
 	feeRate uint32,
 ) error {
-	tx := wire.NewMsgTx(wire.TxVersion)
+	rawTx := wire.NewMsgTx(wire.TxVersion)
 	destinationAddrScript, err := txscript.PayToAddrScript(destinationAddr)
 	if err != nil {
 		return err
@@ -30,18 +30,18 @@ func TransferBtc(
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("using utxo=", utxo.GetTxID())
+
+	tx := common.NewWrappedTx(rawTx, senderAddrScript)
+
 	utxo0, err := wire.NewOutPointFromString(fmt.Sprintf("%s:%d", utxo.GetTxID(), utxo.GetVout()))
 	if err != nil {
 		return err
 	}
-	txin0 := wire.NewTxIn(utxo0, nil, [][]byte{})
-
-	pkData := senderPrivKey.PubKey().SerializeCompressed()
-
-	sigHash0, err := txscript.CalcSignatureHash(senderAddrScript, txscript.SigHashAll, tx, 0)
-	if err != nil {
-		return err
-	}
+	fmt.Println("selected utxo: ", utxo.GetTxID())
+	dummySigScript := bytes.Repeat([]byte{0x00}, 105)
+	txin0 := wire.NewTxIn(utxo0, dummySigScript, [][]byte{})
 
 	tx.AddTxIn(txin0)
 	txout0 := wire.NewTxOut(int64(amtInSats), destinationAddrScript)
@@ -50,16 +50,17 @@ func TransferBtc(
 	txout1 := wire.NewTxOut(int64(amtInSats), senderAddrScript)
 	tx.AddTxOut(txout1)
 
-	dummySigScript := bytes.Repeat([]byte{0x00}, 105)
-	tx.TxIn[0].SignatureScript = dummySigScript
+	pkData := senderPrivKey.PubKey().SerializeCompressed()
 
 	var buf bytes.Buffer
 	err = tx.Serialize(&buf)
 	if err != nil {
+		fmt.Println("error serializing for size est")
 		return err
 	}
 
 	totalFee := feeRate * uint32(buf.Len())
+	fmt.Println("total fee", totalFee)
 
 	// Now that we have the fee, replace the change txout
 	// change = total - amt - fee
@@ -71,6 +72,10 @@ func TransferBtc(
 
 	tx.TxOut[1].Value = change
 
+	sigHash0, err := tx.SigHash(0)
+	if err != nil {
+		return err
+	}
 	sig0 := ecdsa.Sign(&senderPrivKey, sigHash0).Serialize()
 	sig0 = append(sig0, byte(txscript.SigHashAll))
 	sigScript0, err := txscript.NewScriptBuilder().AddData(sig0).AddData(pkData).Script()
@@ -82,12 +87,14 @@ func TransferBtc(
 
 	// TODO: Send tx
 	client := client.NewBitcoinClient(config.GetDefaultConfig())
-	h, err := client.SendRawTransaction(tx, true)
+	h, err := client.SendRawTransaction(tx.MsgTx, true)
+
 	if err != nil {
 		fmt.Println("Error broadcasting tx")
 		fmt.Println(err)
 		return err
 	}
+
 	fmt.Println("TxHash", h.String())
 	return nil
 }
