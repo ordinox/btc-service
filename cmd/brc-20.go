@@ -48,7 +48,7 @@ func e2eCmd(config config.Config) *cobra.Command {
 
 			fmt.Println("inscribing mint inscription...")
 
-			_, err = brc20.InscribeMint(tokenName, uint(amt), args[2], config.BtcConfig)
+			_, err = brc20.InscribeMint(tokenName, uint(amt), args[2], uint(feeRate), config.BtcConfig)
 			if err != nil {
 				return err
 			}
@@ -61,7 +61,7 @@ func e2eCmd(config config.Config) *cobra.Command {
 			time.Sleep(1 * time.Second)
 			fmt.Println("inscribing transfer inscription...")
 
-			insc, err := brc20.InscribeTransfer(tokenName, fromAddr, uint(amt), config)
+			insc, err := brc20.InscribeTransfer(tokenName, fromAddr, uint(amt), uint(feeRate), config)
 			if err != nil {
 				return err
 			}

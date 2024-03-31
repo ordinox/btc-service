@@ -60,13 +60,13 @@ brc20 balance <TICKER> <ADDRESS>
 
 func inscribeDeployCmd(config config.BtcConfig) *cobra.Command {
 	deployCmd := cobra.Command{
-		Use:   "inscribe-deploy [ticker] [supply] [destination]",
+		Use:   "inscribe-deploy [ticker] [supply] [destination] [fee-rate]",
 		Short: "deploy a brc20 token",
 		Long: strings.TrimSpace(`
 Example: 
 brc20 deploy <TICKER> <SUPPLY> <DESTINATION_ADDR>
 		`),
-		Args: cobra.ExactArgs(3),
+		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if args[0] == "" {
 				return fmt.Errorf("ticker name cannot be empty")
@@ -81,7 +81,11 @@ brc20 deploy <TICKER> <SUPPLY> <DESTINATION_ADDR>
 			if err != nil {
 				return err
 			}
-			insc, err := brc20.InscribeDeploy(args[0], uint(amt), args[2], config)
+			feeRate, err := strconv.Atoi(args[3])
+			if err != nil {
+				return err
+			}
+			insc, err := brc20.InscribeDeploy(args[0], uint(amt), args[2], uint(feeRate), config)
 			if err != nil {
 				return err
 			}
@@ -94,13 +98,13 @@ brc20 deploy <TICKER> <SUPPLY> <DESTINATION_ADDR>
 
 func inscribeMintCmd(config config.BtcConfig) *cobra.Command {
 	mintCmd := cobra.Command{
-		Use:   "inscribe-mint [ticker] [amount] [destination]",
+		Use:   "inscribe-mint [ticker] [amount] [destination] [fee-rate]",
 		Short: "mint a brc20 token",
 		Long: strings.TrimSpace(`
 Example: 
 brc20 mint <TICKER> <AMOUNT> <DESTINATION_ADDR>
 		`),
-		Args: cobra.ExactArgs(3),
+		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if args[0] == "" {
 				return fmt.Errorf("ticker name cannot be empty")
@@ -115,7 +119,11 @@ brc20 mint <TICKER> <AMOUNT> <DESTINATION_ADDR>
 			if err != nil {
 				return err
 			}
-			insc, err := brc20.InscribeMint(args[0], uint(amt), args[2], config)
+			feeRate, err := strconv.Atoi(args[3])
+			if err != nil {
+				return err
+			}
+			insc, err := brc20.InscribeMint(args[0], uint(amt), args[2], uint(feeRate), config)
 			if err != nil {
 				return err
 			}
@@ -128,8 +136,8 @@ brc20 mint <TICKER> <AMOUNT> <DESTINATION_ADDR>
 
 func inscribeTransferCmd(config config.Config) *cobra.Command {
 	transferCmd := cobra.Command{
-		Use:        "inscribe-transfer [fromAddr] [ticker] [amt]",
-		Args:       cobra.MatchAll(cobra.ExactArgs(3)),
+		Use:        "inscribe-transfer [fromAddr] [ticker] [amt] [fee-rate]",
+		Args:       cobra.MatchAll(cobra.ExactArgs(4)),
 		ArgAliases: []string{"fromAddr", "ticker", "amt"},
 		ValidArgs:  []string{"fromAddr", "ticker", "amt"},
 		Short:      "transfer brc20 tokens from the given address to another",
@@ -148,7 +156,12 @@ func inscribeTransferCmd(config config.Config) *cobra.Command {
 				return err
 			}
 
-			inscriptionsRes, err := brc20.InscribeTransfer(ticker, fromAddr, uint(amt), config)
+			feeRate, err := strconv.Atoi(args[3])
+			if err != nil {
+				return err
+			}
+
+			inscriptionsRes, err := brc20.InscribeTransfer(ticker, fromAddr, uint(amt), uint(feeRate), config)
 			if err != nil {
 				return err
 			}

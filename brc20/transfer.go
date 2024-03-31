@@ -27,7 +27,7 @@ type transfer struct {
 	Amt  string `json:"amt"`
 }
 
-func InscribeTransfer(ticker string, from btcutil.Address, amt uint, config config.Config) (*inscriptions.InscriptionResultRaw, error) {
+func InscribeTransfer(ticker string, from btcutil.Address, amt, feeRate uint, config config.Config) (*inscriptions.InscriptionResultRaw, error) {
 	transfer := transfer{
 		P:    "brc-20",
 		Op:   "transfer",
@@ -35,7 +35,7 @@ func InscribeTransfer(ticker string, from btcutil.Address, amt uint, config conf
 		Amt:  fmt.Sprintf("%d", amt),
 	}
 	bz, _ := json.Marshal(transfer)
-	return inscriptions.Inscribe(string(bz), from.String(), config.BtcConfig)
+	return inscriptions.Inscribe(string(bz), from.String(), feeRate, config.BtcConfig)
 
 	client := client.NewBitcoinClient(config)
 	err := client.ImportAddress(from.String())

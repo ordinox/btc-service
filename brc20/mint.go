@@ -15,7 +15,7 @@ type mint struct {
 	Amt  string `json:"amt"`
 }
 
-func InscribeMint(ticker string, cap uint, destination string, config config.BtcConfig) (*inscriptions.InscriptionResultRaw, error) {
+func InscribeMint(ticker string, cap uint, destination string, feeRate uint, config config.BtcConfig) (*inscriptions.InscriptionResultRaw, error) {
 	mint := mint{
 		P:    "brc-20",
 		Op:   "mint",
@@ -25,5 +25,5 @@ func InscribeMint(ticker string, cap uint, destination string, config config.Btc
 
 	bz, _ := json.Marshal(mint)
 	inscription := string(bz)
-	return inscriptions.Inscribe(inscription, destination, config)
+	return inscriptions.Inscribe(inscription, destination, feeRate, config)
 }

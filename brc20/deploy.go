@@ -16,7 +16,7 @@ type deploy struct {
 	Lim  string `json:"lim"`
 }
 
-func InscribeDeploy(ticker string, cap uint, destination string, config config.BtcConfig) (*inscriptions.InscriptionResultRaw, error) {
+func InscribeDeploy(ticker string, cap uint, destination string, feeRate uint, config config.BtcConfig) (*inscriptions.InscriptionResultRaw, error) {
 	deploy := deploy{
 		P:    "brc-20",
 		Op:   "deploy",
@@ -27,5 +27,5 @@ func InscribeDeploy(ticker string, cap uint, destination string, config config.B
 
 	bz, _ := json.Marshal(deploy)
 	inscription := string(bz)
-	return inscriptions.Inscribe(inscription, destination, config)
+	return inscriptions.Inscribe(inscription, destination, feeRate, config)
 }

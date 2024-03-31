@@ -13,11 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func Inscribe(inscription, destination string, config config.BtcConfig) (*InscriptionResultRaw, error) {
-	fee, err := getAvgFee()
-	if err != nil {
-		return nil, err
-	}
+func Inscribe(inscription, destination string, feeRate uint, config config.BtcConfig) (*InscriptionResultRaw, error) {
 	file, err := os.CreateTemp("", "*.txt")
 	if err != nil {
 		log.Error().Msgf("Error writing inscription to the temp file - %s", err)
@@ -28,7 +24,7 @@ func Inscribe(inscription, destination string, config config.BtcConfig) (*Inscri
 		log.Error().Msgf("Error writing inscription to the temp file - %s", err)
 		return nil, err
 	}
-	args := []string{config.GetOrdChainConfigFlag(), "--bitcoin-data-dir", config.BitcoinDataDir, "--data-dir", config.OrdDataDir, "wallet", "inscribe", "--fee-rate", fmt.Sprintf("%d", fee), "--destination", destination, "--file", file.Name(), "--postage", "546sat"}
+	args := []string{config.GetOrdChainConfigFlag(), "--bitcoin-data-dir", config.BitcoinDataDir, "--data-dir", config.OrdDataDir, "wallet", "inscribe", "--fee-rate", fmt.Sprintf("%d", feeRate), "--destination", destination, "--file", file.Name(), "--postage", "546sat"}
 	cmd := execute.ExecTask{
 		Command:     strings.TrimRight(config.OrdPath, "/") + "/ord",
 		Args:        args,
