@@ -14,6 +14,7 @@ type (
 		OrdPath        string `mapstructure:"ord_path"`
 		BitcoinDataDir string `mapstructure:"bitcoin_data_dir"`
 		OrdDataDir     string `mapstructure:"ord_data_dir"`
+		ElectrumProxy  string `mapstructure:"electrum_proxy"`
 	}
 
 	OpiConfig struct {

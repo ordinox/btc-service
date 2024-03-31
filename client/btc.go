@@ -6,6 +6,7 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/rpcclient"
+	"github.com/ordinox/btc-service/common"
 	"github.com/ordinox/btc-service/config"
 	"github.com/rs/zerolog/log"
 )
@@ -45,6 +46,10 @@ func (r *BtcRpcClient) ImportAddress(address string) error {
 		log.Err(err).Msg("error importing address")
 	}
 	return err
+}
+
+func GetWebUtxo(addr string) []common.WebUtxo {
+	return nil
 }
 
 func (r *BtcRpcClient) GetUtxos(addr btcutil.Address) ([]btcjson.ListUnspentResult, error) {

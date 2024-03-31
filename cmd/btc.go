@@ -3,13 +3,18 @@ package cmd
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"strconv"
 
 	"github.com/alexellis/go-execute/v2"
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcutil"
+	"github.com/ordinox/btc-service/btc"
 	"github.com/ordinox/btc-service/client"
+	"github.com/ordinox/btc-service/common"
 	"github.com/ordinox/btc-service/config"
 	"github.com/spf13/cobra"
 )
@@ -95,6 +100,14 @@ func getUtxosCmd() *cobra.Command {
 		Short: "get utxos for a legacy",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if config.GetDefaultConfig().BtcConfig.ChainConfig == "mainnet" {
+				// Get utxos using electrum
+				utxos, err := btc.GetUtxos(args[0])
+				if err != nil {
+					return err
+				}
+				fmt.Println(utxos.Result)
+			}
 			client := client.NewBitcoinClient(config.GetDefaultConfig())
 			addr, err := btcutil.DecodeAddress(args[0], config.GetDefaultConfig().BtcConfig.GetChainConfigParams())
 			if err != nil {
