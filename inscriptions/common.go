@@ -3,12 +3,11 @@ package inscriptions
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
 func getAvgFee() (uint, error) {
-	return 1000, nil
 	fee := struct {
 		FastestFee uint `json:"fastestFee"`
 		AvgFee     uint `json:"halfHourFee"`
@@ -22,7 +21,7 @@ func getAvgFee() (uint, error) {
 		return 1, err
 	}
 	defer res.Body.Close()
-	o, err := ioutil.ReadAll(res.Body)
+	o, err := io.ReadAll(res.Body)
 	if err != nil {
 		fmt.Println("Error reading fee rate response", err)
 		return 1, err
