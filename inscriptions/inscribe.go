@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/alexellis/go-execute/v2"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/ordinox/btc-service/config"
 	"github.com/rs/zerolog/log"
 )
@@ -25,6 +26,9 @@ func Inscribe(inscription, destination string, feeRate uint, config config.BtcCo
 		return nil, err
 	}
 	args := []string{config.GetOrdChainConfigFlag(), "--bitcoin-data-dir", config.BitcoinDataDir, "--data-dir", config.OrdDataDir, "wallet", "inscribe", "--fee-rate", fmt.Sprintf("%d", feeRate), "--destination", destination, "--file", file.Name(), "--postage", "546sat"}
+	if config.GetChainConfigParams().Name == chaincfg.MainNetParams.Name {
+		args = args[1:]
+	}
 	cmd := execute.ExecTask{
 		Command:     strings.TrimRight(config.OrdPath, "/") + "/ord",
 		Args:        args,
