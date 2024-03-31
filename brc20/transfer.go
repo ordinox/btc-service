@@ -79,7 +79,8 @@ func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint, pri
 		}
 		if utxo.Amount == 546e-8 && inscriptionTxId == utxo.TxID {
 			inscriptionUtxo = &utxo
-		} else if utxo.Amount > 10000e-8 {
+		} else if utxo.GetValueInSats() > 6500 {
+			// TODO: Check if this can be potential inscription
 			feeUtxo = &utxo
 		}
 	}

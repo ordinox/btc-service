@@ -45,24 +45,8 @@ func TransferBtc(
 	tx.AddTxIn(txin0)
 	txout0 := wire.NewTxOut(int64(amtInSats), destinationAddrScript)
 	tx.AddTxOut(txout0)
-	// // AmtInSats here is just a placeholder for calculating the size
-	// txout1 := wire.NewTxOut(int64(amtInSats), senderAddrScript)
-	// tx.AddTxOut(txout1)
 
 	pkData := senderPrivKey.PubKey().SerializeCompressed()
-
-	// var buf bytes.Buffer
-	// err = tx.Serialize(&buf)
-	// if err != nil {
-	// 	fmt.Println("error serializing for size est")
-	// 	return err
-	// }
-
-	// totalFee := feeRate * uint32(buf.Len())
-	// fmt.Println("total fee", totalFee)
-
-	// Now that we have the fee, replace the change txout
-	// change = total - amt - fee
 
 	totalFee, err := tx.EstimateGas(uint64(feeRate))
 	if err != nil {
