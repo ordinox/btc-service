@@ -10,7 +10,6 @@ import (
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
-	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
@@ -48,7 +47,7 @@ func InscribeTransfer(ticker string, from btcutil.Address, amt uint, config conf
 	if err != nil {
 		log.Err(err).Msgf("error getting utxos for address: %s", from.String())
 	}
-	cardinal := btcjson.ListUnspentResult{}
+	var cardinal common.Utxo
 	_ = cardinal
 	for _, utxo := range utxos {
 		fmt.Println(utxo.TxID)
@@ -64,14 +63,15 @@ func InscribeTransfer(ticker string, from btcutil.Address, amt uint, config conf
 }
 
 func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint, privKey btcec.PrivateKey, config config.Config) (*string, error) {
+	// TODO: Calculate change
 	client := client.NewBitcoinClient(config)
 	utxos, err := client.GetUtxos(from)
 	if err != nil {
 		return nil, err
 	}
 	inscriptionTxId := inscriptionId[:len(inscriptionId)-2]
-	var inscriptionUtxo *btcjson.ListUnspentResult
-	var feeUtxo *btcjson.ListUnspentResult
+	var inscriptionUtxo common.Utxo
+	var feeUtxo common.Utxo
 	for i := range utxos {
 		utxo := utxos[i]
 		if feeUtxo != nil && inscriptionUtxo != nil {
@@ -90,7 +90,7 @@ func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint, pri
 		return nil, fmt.Errorf("no fee utxo found")
 	}
 
-	err = Transfer(*feeUtxo, *inscriptionUtxo, from, to, &privKey, privKey.PubKey())
+	err = Transfer(feeUtxo, inscriptionUtxo, from, to, &privKey, privKey.PubKey())
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint, pri
 }
 
 // Use UTXOs of the given wallet to transfer an inscription
-func Transfer(cUtxo, iUtxo btcjson.ListUnspentResult, sendderAddr, destAddr btcutil.Address, senderPk *btcec.PrivateKey, senderPubKey *btcec.PublicKey) error {
+func Transfer(cUtxo, iUtxo common.Utxo, sendderAddr, destAddr btcutil.Address, senderPk *btcec.PrivateKey, senderPubKey *btcec.PublicKey) error {
 	tx, err := BuildTransferTx(cUtxo, iUtxo, sendderAddr, destAddr)
 	if err != nil {
 		log.Err(err).Msg("error building MsgTx")
@@ -151,7 +151,7 @@ func Transfer(cUtxo, iUtxo btcjson.ListUnspentResult, sendderAddr, destAddr btcu
 
 // 89e68ee66bbed960bd2ac69159bce2d188c8a1e19c6196de7ce3e7dfe91ecb9e
 
-func BuildTransferTx(cardinalUtxo, inscriptionUtxo btcjson.ListUnspentResult, senderAddr, destinationAddr btcutil.Address) (*common.WrappedTx, error) {
+func BuildTransferTx(cardinalUtxo, inscriptionUtxo common.Utxo, senderAddr, destinationAddr btcutil.Address) (*common.WrappedTx, error) {
 	tx := wire.NewMsgTx(wire.TxVersion)
 	destinationAddrScript, err := txscript.PayToAddrScript(destinationAddr)
 	if err != nil {
@@ -162,8 +162,8 @@ func BuildTransferTx(cardinalUtxo, inscriptionUtxo btcjson.ListUnspentResult, se
 		return nil, err
 	}
 
-	utxo0, err := wire.NewOutPointFromString(fmt.Sprintf("%s:%d", inscriptionUtxo.TxID, inscriptionUtxo.Vout))
-	utxo1, err := wire.NewOutPointFromString(fmt.Sprintf("%s:%d", cardinalUtxo.TxID, cardinalUtxo.Vout))
+	utxo0, err := wire.NewOutPointFromString(fmt.Sprintf("%s:%d", inscriptionUtxo.GetTxID(), inscriptionUtxo.GetVout()))
+	utxo1, err := wire.NewOutPointFromString(fmt.Sprintf("%s:%d", cardinalUtxo.GetTxID(), cardinalUtxo.GetVout()))
 
 	txin0 := wire.NewTxIn(utxo0, nil, [][]byte{})
 	tx.AddTxIn(txin0)

@@ -69,7 +69,7 @@ func genBlocksCmd(config config.BtcConfig) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Println("blocks generated")
+			fmt.Printf("%d blocks generated to %s\n", amt, addr)
 			return nil
 		},
 	}
@@ -104,8 +104,8 @@ func getUtxosCmd() *cobra.Command {
 				}
 				for _, u := range utxos.Result {
 					fmt.Println("hash: ", u.TxHash)
-					fmt.Println("pos: ", u.TxPos)
-					fmt.Println("pos: ", u.Value)
+					fmt.Println("pos: ", u.Vout)
+					fmt.Println("val: ", u.Value)
 					fmt.Println("---------------")
 				}
 				return nil
@@ -120,10 +120,63 @@ func getUtxosCmd() *cobra.Command {
 				return err
 			}
 			for _, u := range utxos {
-				fmt.Println(u)
+				utxo := u
+				fmt.Println("hash: ", utxo.GetTxID())
+				fmt.Println("pos: ", utxo.GetVout())
+				fmt.Println("val: ", utxo.GetValueInSats())
+				fmt.Println("---------------")
 			}
 			return nil
 		},
 	}
 	return cmd
+}
+
+func transferBtcCmd(config config.Config) *cobra.Command {
+	transferCmd := cobra.Command{
+		Use:   "transfer [fromAddr] [toAddr] [feeRate] [amt] [privateKey]",
+		Short: "transfer inscriptions",
+		Args:  cobra.ExactArgs(5),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fromAddr, err := btcutil.DecodeAddress(args[0], config.BtcConfig.GetChainConfigParams())
+			if err != nil {
+				return err
+			}
+
+			toAddr, err := btcutil.DecodeAddress(args[1], config.BtcConfig.GetChainConfigParams())
+			if err != nil {
+				return err
+			}
+
+			feeRate, err := strconv.Atoi(args[2])
+			if err != nil {
+				return err
+			}
+
+			amt, err := strconv.Atoi(args[3])
+			if err != nil {
+				return err
+			}
+
+			privKeyB, err := hex.DecodeString(args[4])
+			if err != nil {
+				return err
+			}
+			privKey, _ := btcec.PrivKeyFromBytes(privKeyB)
+
+			err = btc.TransferBtc(
+				*privKey,
+				fromAddr,
+				toAddr,
+				nil,
+				uint64(amt),
+				uint32(feeRate),
+			)
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+	}
+	return &transferCmd
 }

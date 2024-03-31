@@ -1,9 +1,9 @@
 package client
 
 import (
+	"fmt"
 	"strings"
 
-	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/ordinox/btc-service/common"
@@ -52,12 +52,12 @@ func GetWebUtxo(addr string) []common.WebUtxo {
 	return nil
 }
 
-func (r *BtcRpcClient) GetUtxos(addr btcutil.Address) ([]btcjson.ListUnspentResult, error) {
+func (r *BtcRpcClient) GetUtxos(addr btcutil.Address) ([]common.BtcUnspent, error) {
 	if r.TrackedAddreses == nil {
 		r.TrackedAddreses = make(map[string]bool)
 	}
 	if _, ok := r.TrackedAddreses[strings.ToLower(addr.String())]; !ok {
-		if err := r.ImportAddressRescan(addr.String(), "", false); err != nil {
+		if err := r.ImportAddress(addr.String()); err != nil {
 			return nil, err
 		}
 	}
@@ -65,10 +65,11 @@ func (r *BtcRpcClient) GetUtxos(addr btcutil.Address) ([]btcjson.ListUnspentResu
 	if err != nil {
 		return nil, err
 	}
-	utxos := make([]btcjson.ListUnspentResult, 0)
+	utxos := make([]common.BtcUnspent, 0)
+	fmt.Println("UTXO Length", len(unspent))
 	for _, utxo := range unspent {
 		if utxo.Address == addr.String() {
-			utxos = append(utxos, utxo)
+			utxos = append(utxos, common.NewBtcUnspent(utxo))
 		}
 	}
 	return utxos, nil
