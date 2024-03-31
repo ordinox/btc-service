@@ -11,7 +11,7 @@ import (
 )
 
 func GetUtxos(address string) (*common.WebUtxoResponse, error) {
-	url := fmt.Sprintf("%s/get_utxos?address=%s", config.GetDefaultConfig().BtcConfig.ElectrumProxy, args[0])
+	url := fmt.Sprintf("%s/get_utxos?address=%s", config.GetDefaultConfig().BtcConfig.ElectrumProxy, address)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err

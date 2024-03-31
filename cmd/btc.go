@@ -3,10 +3,7 @@ package cmd
 import (
 	"context"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"strconv"
 
 	"github.com/alexellis/go-execute/v2"
@@ -14,7 +11,6 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/ordinox/btc-service/btc"
 	"github.com/ordinox/btc-service/client"
-	"github.com/ordinox/btc-service/common"
 	"github.com/ordinox/btc-service/config"
 	"github.com/spf13/cobra"
 )
