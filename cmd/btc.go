@@ -103,6 +103,7 @@ func getUtxosCmd() *cobra.Command {
 					return err
 				}
 				fmt.Println(utxos.Result)
+				return nil
 			}
 			client := client.NewBitcoinClient(config.GetDefaultConfig())
 			addr, err := btcutil.DecodeAddress(args[0], config.GetDefaultConfig().BtcConfig.GetChainConfigParams())
