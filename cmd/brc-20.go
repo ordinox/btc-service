@@ -97,9 +97,9 @@ func e2eCmd(config config.Config) *cobra.Command {
 
 func transferCmd(config config.Config) *cobra.Command {
 	transferCmd := cobra.Command{
-		Use:   "transfer [fromAddr] [toAddr] [transferInscriptionId] [amt] [privateKey]",
+		Use:   "transfer [fromAddr] [toAddr] [transferInscriptionId] [amt] [privateKey] [fee-rate]",
 		Short: "transfer inscriptions",
-		Args:  cobra.ExactArgs(5),
+		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fromAddr, err := btcutil.DecodeAddress(args[0], config.BtcConfig.GetChainConfigParams())
 			if err != nil {
