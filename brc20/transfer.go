@@ -13,6 +13,7 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
+	"github.com/ordinox/btc-service/btc"
 	"github.com/ordinox/btc-service/client"
 	"github.com/ordinox/btc-service/common"
 	"github.com/ordinox/btc-service/config"
@@ -63,12 +64,22 @@ func InscribeTransfer(ticker string, from btcutil.Address, amt, feeRate uint, co
 }
 
 func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint, privKey btcec.PrivateKey, feeRate uint64, config config.Config) (*string, error) {
-	// TODO: Calculate change
 	client := client.NewBitcoinClient(config)
-	utxos, err := client.GetUtxos(from)
-	if err != nil {
-		return nil, err
+	var utxos []common.Utxo
+	if config.BtcConfig.ChainConfig == "mainnet" {
+		mUtxos, err := btc.GetUtxos(from.EncodeAddress())
+		if err != nil {
+			return nil, err
+		}
+		utxos = mUtxos.Result.ToUtxo()
+	} else {
+		rUtxos, err := client.GetUtxos(from)
+		if err != nil {
+			return nil, err
+		}
+		utxos = rUtxos.ToUtxo()
 	}
+
 	inscriptionTxId := inscriptionId[:len(inscriptionId)-2]
 	var inscriptionUtxo common.Utxo
 	var feeUtxo common.Utxo
@@ -77,11 +88,11 @@ func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint, pri
 		if feeUtxo != nil && inscriptionUtxo != nil {
 			break
 		}
-		if utxo.Amount == 546e-8 && inscriptionTxId == utxo.TxID {
-			inscriptionUtxo = &utxo
+		if utxo.GetValueInSats() == 546 && inscriptionTxId == utxo.GetTxID() {
+			inscriptionUtxo = utxo
 		} else if utxo.GetValueInSats() > 6500 {
 			// TODO: Check if this can be potential inscription
-			feeUtxo = &utxo
+			feeUtxo = utxo
 		}
 	}
 	if inscriptionUtxo == nil {
@@ -91,7 +102,7 @@ func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint, pri
 		return nil, fmt.Errorf("no fee utxo found")
 	}
 
-	err = Transfer(feeUtxo, inscriptionUtxo, from, to, &privKey, privKey.PubKey(), feeRate)
+	err := Transfer(feeUtxo, inscriptionUtxo, from, to, &privKey, privKey.PubKey(), feeRate)
 	if err != nil {
 		return nil, err
 	}

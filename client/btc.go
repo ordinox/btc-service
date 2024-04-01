@@ -51,7 +51,7 @@ func GetWebUtxo(addr string) []common.WebUtxo {
 	return nil
 }
 
-func (r *BtcRpcClient) GetUtxos(addr btcutil.Address) ([]common.BtcUnspent, error) {
+func (r *BtcRpcClient) GetUtxos(addr btcutil.Address) (common.BtcUnspents, error) {
 	if r.TrackedAddreses == nil {
 		r.TrackedAddreses = make(map[string]bool)
 	}

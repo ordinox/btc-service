@@ -9,9 +9,9 @@ type Utxo interface {
 }
 
 type WebUtxoResponse struct {
-	ID      string    `json:"id"`
-	Jsonrpc string    `json:"jsonrpc"`
-	Result  []WebUtxo `json:"result"`
+	ID      string   `json:"id"`
+	Jsonrpc string   `json:"jsonrpc"`
+	Result  WebUtxos `json:"result"`
 }
 
 type WebUtxo struct {
@@ -19,6 +19,16 @@ type WebUtxo struct {
 	TxHash string `json:"tx_hash"`
 	Vout   uint32 `json:"tx_pos"`
 	Value  uint64 `json:"value"`
+}
+
+type WebUtxos []WebUtxo
+
+func (w WebUtxos) ToUtxo() []Utxo {
+	var utxos []Utxo = make([]Utxo, len(w))
+	for i := range w {
+		utxos[i] = w[i]
+	}
+	return utxos
 }
 
 func (w WebUtxo) GetTxID() string {
@@ -37,6 +47,8 @@ type BtcUnspent struct {
 	btcjson.ListUnspentResult
 }
 
+type BtcUnspents []BtcUnspent
+
 func (w BtcUnspent) GetTxID() string {
 	return w.TxID
 }
@@ -47,6 +59,14 @@ func (w BtcUnspent) GetVout() uint32 {
 
 func (w BtcUnspent) GetValueInSats() uint64 {
 	return uint64(w.Amount * 100000000)
+}
+
+func (w BtcUnspents) ToUtxo() []Utxo {
+	var utxos []Utxo = make([]Utxo, len(w))
+	for i := range w {
+		utxos[i] = w[i]
+	}
+	return utxos
 }
 
 func NewBtcUnspent(b btcjson.ListUnspentResult) BtcUnspent {
