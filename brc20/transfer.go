@@ -158,6 +158,7 @@ func Transfer(cUtxo, iUtxo common.Utxo, sendderAddr, destAddr btcutil.Address, s
 		return err
 	}
 	log.Info().Msgf("hash: %s", h.String())
+	log.Info().Msgf("fee: %d", gas)
 	return nil
 }
 
