@@ -144,7 +144,7 @@ func transferCmd(config config.Config) *cobra.Command {
 
 func sendBrc20Cmd(config config.Config) *cobra.Command {
 	transferCmd := cobra.Command{
-		Use:   "transfer [fromAddr] [toAddr] [ticker] [amt] [privateKey] [fee-rate]",
+		Use:   "send fromAddr toAddr ticker amt privateKey fee-rate",
 		Short: "transfer inscriptions",
 		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
