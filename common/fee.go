@@ -1,4 +1,4 @@
-package inscriptions
+package common
 
 import (
 	"encoding/json"
@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func getAvgFee() (uint, error) {
+func GetFastestFeeRate() (uint, error) {
 	fee := struct {
 		FastestFee uint `json:"fastestFee"`
 		AvgFee     uint `json:"halfHourFee"`
