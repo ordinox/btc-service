@@ -20,6 +20,7 @@ func TransferBtc(
 	utxo common.Utxo,
 	amtInSats uint64,
 	feeRate uint32,
+	config config.Config,
 ) error {
 	rawTx := wire.NewMsgTx(wire.TxVersion)
 	destinationAddrScript, err := txscript.PayToAddrScript(destinationAddr)
@@ -76,7 +77,7 @@ func TransferBtc(
 	tx.TxIn[0].SignatureScript = sigScript0
 
 	// TODO: Send tx
-	client := client.NewBitcoinClient(config.GetDefaultConfig())
+	client := client.NewBitcoinClient(config)
 	h, err := client.SendRawTransaction(tx.MsgTx, true)
 
 	if err != nil {

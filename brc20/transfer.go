@@ -68,7 +68,7 @@ func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint64, p
 	client := client.NewBitcoinClient(config)
 	var utxos []common.Utxo
 	if config.BtcConfig.ChainConfig == "mainnet" {
-		mUtxos, err := btc.GetUtxos(from.EncodeAddress())
+		mUtxos, err := btc.GetUtxos(from.EncodeAddress(), config.BtcConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -103,7 +103,7 @@ func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint64, p
 		return nil, fmt.Errorf("no fee utxo found")
 	}
 
-	hash, err := Transfer(feeUtxo, inscriptionUtxo, from, to, &privKey, privKey.PubKey(), feeRate)
+	hash, err := Transfer(feeUtxo, inscriptionUtxo, from, to, &privKey, privKey.PubKey(), feeRate, config)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint64, p
 }
 
 // Use UTXOs of the given wallet to transfer an inscription
-func Transfer(cUtxo, iUtxo common.Utxo, sendderAddr, destAddr btcutil.Address, senderPk *btcec.PrivateKey, senderPubKey *btcec.PublicKey, feeRate uint64) (string, error) {
+func Transfer(cUtxo, iUtxo common.Utxo, sendderAddr, destAddr btcutil.Address, senderPk *btcec.PrivateKey, senderPubKey *btcec.PublicKey, feeRate uint64, config config.Config) (string, error) {
 	tx, err := BuildTransferTx(cUtxo, iUtxo, sendderAddr, destAddr)
 	if err != nil {
 		log.Err(err).Msg("error building MsgTx")
@@ -163,7 +163,7 @@ func Transfer(cUtxo, iUtxo common.Utxo, sendderAddr, destAddr btcutil.Address, s
 	tx.TxIn[0].SignatureScript = sigScript0
 	tx.TxIn[1].SignatureScript = sigScript1
 
-	client := client.NewBitcoinClient(config.GetDefaultConfig())
+	client := client.NewBitcoinClient(config)
 	h, err := client.SendRawTransaction(tx.MsgTx, true)
 	if err != nil {
 		log.Err(err).Msg("error broadcasting txn")

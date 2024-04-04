@@ -116,7 +116,7 @@ func getUtxosCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if config.GetDefaultConfig().BtcConfig.ChainConfig == "mainnet" {
 				// Get utxos using electrum
-				utxos, err := btc.GetUtxos(args[0])
+				utxos, err := btc.GetUtxos(args[0], config.GetDefaultConfig().BtcConfig)
 				if err != nil {
 					return err
 				}
@@ -183,7 +183,7 @@ func transferBtcCmd(config config.Config) *cobra.Command {
 			privKey, _ := btcec.PrivKeyFromBytes(privKeyB)
 			var selectedUtxo common.Utxo
 			if config.BtcConfig.ChainConfig == "mainnet" {
-				utxos, err := btc.GetUtxos(fromAddr.EncodeAddress())
+				utxos, err := btc.GetUtxos(fromAddr.EncodeAddress(), config.BtcConfig)
 				if err != nil {
 					return err
 				}
@@ -220,6 +220,7 @@ func transferBtcCmd(config config.Config) *cobra.Command {
 				selectedUtxo,
 				uint64(amt),
 				uint32(feeRate),
+				config,
 			)
 			if err != nil {
 				return err

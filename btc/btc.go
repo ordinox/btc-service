@@ -10,8 +10,8 @@ import (
 	"github.com/ordinox/btc-service/config"
 )
 
-func GetUtxos(address string) (*common.WebUtxoResponse, error) {
-	url := fmt.Sprintf("%s/get_utxos?address=%s", config.GetDefaultConfig().BtcConfig.ElectrumProxy, address)
+func GetUtxos(address string, config config.BtcConfig) (*common.WebUtxoResponse, error) {
+	url := fmt.Sprintf("%s/get_utxos?address=%s", config.ElectrumProxy, address)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
