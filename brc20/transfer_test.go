@@ -48,7 +48,7 @@ func TestTransf(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	err = Transfer(utxos[0], utxos[2], senderAddr, destinationAddr, senderPk, senderPk.PubKey(), 25)
+	_, err = Transfer(utxos[0], utxos[2], senderAddr, destinationAddr, senderPk, senderPk.PubKey(), 25)
 	if err != nil {
 		panic(err)
 	}

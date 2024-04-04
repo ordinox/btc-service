@@ -28,7 +28,7 @@ type transfer struct {
 	Amt  string `json:"amt"`
 }
 
-func InscribeTransfer(ticker string, from btcutil.Address, amt, feeRate uint, config config.Config) (*inscriptions.InscriptionResultRaw, error) {
+func InscribeTransfer(ticker string, from btcutil.Address, amt, feeRate uint64, config config.Config) (*inscriptions.InscriptionResultRaw, error) {
 	transfer := transfer{
 		P:    "brc-20",
 		Op:   "transfer",
@@ -63,7 +63,7 @@ func InscribeTransfer(ticker string, from btcutil.Address, amt, feeRate uint, co
 
 }
 
-func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint, privKey btcec.PrivateKey, feeRate uint64, config config.Config) (*string, error) {
+func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint64, privKey btcec.PrivateKey, feeRate uint64, config config.Config) (*string, error) {
 	client := client.NewBitcoinClient(config)
 	var utxos []common.Utxo
 	if config.BtcConfig.ChainConfig == "mainnet" {
@@ -102,11 +102,11 @@ func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint, pri
 		return nil, fmt.Errorf("no fee utxo found")
 	}
 
-	err := Transfer(feeUtxo, inscriptionUtxo, from, to, &privKey, privKey.PubKey(), feeRate)
+	hash, err := Transfer(feeUtxo, inscriptionUtxo, from, to, &privKey, privKey.PubKey(), feeRate)
 	if err != nil {
 		return nil, err
 	}
-	res := "transfer complete"
+	res := "transfer complete with hash: " + hash
 
 	// fmt.Println(hash.String())
 
@@ -114,16 +114,16 @@ func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint, pri
 }
 
 // Use UTXOs of the given wallet to transfer an inscription
-func Transfer(cUtxo, iUtxo common.Utxo, sendderAddr, destAddr btcutil.Address, senderPk *btcec.PrivateKey, senderPubKey *btcec.PublicKey, feeRate uint64) error {
+func Transfer(cUtxo, iUtxo common.Utxo, sendderAddr, destAddr btcutil.Address, senderPk *btcec.PrivateKey, senderPubKey *btcec.PublicKey, feeRate uint64) (string, error) {
 	tx, err := BuildTransferTx(cUtxo, iUtxo, sendderAddr, destAddr)
 	if err != nil {
 		log.Err(err).Msg("error building MsgTx")
-		return err
+		return "", err
 	}
 	gas, err := tx.EstimateGas(feeRate)
 	if err != nil {
 		log.Err(err).Msg("error estimating gas")
-		return err
+		return "", err
 	}
 
 	change := cUtxo.GetValueInSats() - gas
@@ -135,7 +135,7 @@ func Transfer(cUtxo, iUtxo common.Utxo, sendderAddr, destAddr btcutil.Address, s
 	sigHash0, err := tx.SigHash(0)
 	if err != nil {
 		log.Err(err).Msg("error generating sighash0")
-		return err
+		return "", err
 	}
 
 	sig0 := ecdsa.Sign(senderPk, sigHash0).Serialize()
@@ -143,7 +143,7 @@ func Transfer(cUtxo, iUtxo common.Utxo, sendderAddr, destAddr btcutil.Address, s
 	sigScript0, err := txscript.NewScriptBuilder().AddData(sig0).AddData(pkData).Script()
 	if err != nil {
 		log.Err(err).Msg("error building sigScript0")
-		return err
+		return "", err
 	}
 
 	// Prepare sigscript - uncompressed
@@ -166,11 +166,26 @@ func Transfer(cUtxo, iUtxo common.Utxo, sendderAddr, destAddr btcutil.Address, s
 	h, err := client.SendRawTransaction(tx.MsgTx, true)
 	if err != nil {
 		log.Err(err).Msg("error broadcasting txn")
-		return err
+		return "", err
 	}
 	log.Info().Msgf("hash: %s", h.String())
 	log.Info().Msgf("fee: %d", gas)
-	return nil
+	return h.String(), nil
+}
+
+func SendBrc20(ticker string, from, to btcutil.Address, amt, feeRate uint64, privKey btcec.PrivateKey, config config.Config) (inscriptionId, hash string, err error) {
+	res, err := InscribeTransfer(ticker, from, amt, feeRate, config)
+	if err != nil {
+		return "", "", err
+	}
+	inscriptionId = res.Inscriptions[0].Id
+	res2, err := TransferBrc20(from, to, res.Inscriptions[0].Id, amt, privKey, feeRate, config)
+	if err != nil {
+		return inscriptionId, "", err
+	}
+	hash = *res2
+	err = nil
+	return
 }
 
 // 89e68ee66bbed960bd2ac69159bce2d188c8a1e19c6196de7ce3e7dfe91ecb9e

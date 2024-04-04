@@ -25,6 +25,7 @@ func brc20Cmd(config config.Config) *cobra.Command {
 		inscribeTransferCmd(config),
 		transferCmd(config),
 		e2eCmd(config),
+		sendBrc20Cmd(config),
 	)
 	return &brc20Cmd
 }
@@ -85,7 +86,7 @@ brc20 deploy <TICKER> <SUPPLY> <DESTINATION_ADDR>
 			if err != nil {
 				return err
 			}
-			insc, err := brc20.InscribeDeploy(args[0], uint(amt), args[2], uint(feeRate), config)
+			insc, err := brc20.InscribeDeploy(args[0], uint(amt), args[2], uint64(feeRate), config)
 			if err != nil {
 				return err
 			}
@@ -123,7 +124,7 @@ brc20 mint <TICKER> <AMOUNT> <DESTINATION_ADDR>
 			if err != nil {
 				return err
 			}
-			insc, err := brc20.InscribeMint(args[0], uint(amt), args[2], uint(feeRate), config)
+			insc, err := brc20.InscribeMint(args[0], uint(amt), args[2], uint64(feeRate), config)
 			if err != nil {
 				return err
 			}
@@ -161,7 +162,7 @@ func inscribeTransferCmd(config config.Config) *cobra.Command {
 				return err
 			}
 
-			inscriptionsRes, err := brc20.InscribeTransfer(ticker, fromAddr, uint(amt), uint(feeRate), config)
+			inscriptionsRes, err := brc20.InscribeTransfer(ticker, fromAddr, uint64(amt), uint64(feeRate), config)
 			if err != nil {
 				return err
 			}

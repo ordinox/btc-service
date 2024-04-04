@@ -15,7 +15,7 @@ type mint struct {
 	Amt  string `json:"amt"`
 }
 
-func InscribeMint(ticker string, cap uint, destination string, feeRate uint, config config.BtcConfig) (*inscriptions.InscriptionResultRaw, error) {
+func InscribeMint(ticker string, cap uint, destination string, feeRate uint64, config config.BtcConfig) (*inscriptions.InscriptionResultRaw, error) {
 	mint := mint{
 		P:    "brc-20",
 		Op:   "mint",

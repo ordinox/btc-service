@@ -14,7 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func Inscribe(inscription, destination string, feeRate uint, config config.BtcConfig) (*InscriptionResultRaw, error) {
+func Inscribe(inscription, destination string, feeRate uint64, config config.BtcConfig) (*InscriptionResultRaw, error) {
 	file, err := os.CreateTemp("", "*.txt")
 	if err != nil {
 		log.Error().Msgf("Error writing inscription to the temp file - %s", err)

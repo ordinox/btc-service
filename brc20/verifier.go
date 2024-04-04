@@ -7,6 +7,7 @@ import (
 )
 
 func VerifyBrc20Deposit(config config.Config, inscriptionId string) (string, string, error) {
+	// TODO: Add amount checking
 	client := client.NewOpiClient(config.OpiConfig)
 	events, err := client.GetEventsByInscriptionId(inscriptionId)
 	if err != nil {
