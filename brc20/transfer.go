@@ -7,6 +7,7 @@ package brc20
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
@@ -179,6 +180,7 @@ func SendBrc20(ticker string, from, to btcutil.Address, amt, feeRate uint64, pri
 		return "", "", err
 	}
 	inscriptionId = res.Inscriptions[0].Id
+	time.Sleep(5 * time.Second)
 	res2, err := TransferBrc20(from, to, res.Inscriptions[0].Id, amt, privKey, feeRate, config)
 	if err != nil {
 		return inscriptionId, "", err
