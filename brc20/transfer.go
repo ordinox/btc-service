@@ -87,7 +87,8 @@ func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint64, p
 			fmt.Printf("-- Err InscriptionUtxoFound? %t  FeeUtxoFound? %t \n", inscriptionUtxo != nil, feeUtxo != nil)
 			return nil, fmt.Errorf("couldn't finalise inscription/fee UTXO within the backoff time (120s)")
 		}
-		inscriptionUtxo, feeUtxo, err := getUtxos(client, from, inscriptionTxId, config)
+		var err error
+		inscriptionUtxo, feeUtxo, err = getUtxos(client, from, inscriptionTxId, config)
 		if err != nil {
 			fmt.Printf("-- err getting utxos InscriptionUtxoFound? %t FeeUtxoFound? %t \n", inscriptionUtxo != nil, feeUtxo != nil)
 			return nil, err
