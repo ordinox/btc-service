@@ -38,30 +38,6 @@ func InscribeTransfer(ticker string, from btcutil.Address, amt, feeRate uint64, 
 	}
 	bz, _ := json.Marshal(transfer)
 	return inscriptions.Inscribe(string(bz), from.String(), feeRate, config.BtcConfig)
-
-	client := client.NewBitcoinClient(config)
-	err := client.ImportAddress(from.String())
-	if err != nil {
-		log.Err(err).Msg("error importing address for tracking")
-		return nil, err
-	}
-	utxos, err := client.GetUtxos(from)
-	if err != nil {
-		log.Err(err).Msgf("error getting utxos for address: %s", from.String())
-	}
-	var cardinal common.Utxo
-	_ = cardinal
-	for _, utxo := range utxos {
-		fmt.Println(utxo.TxID)
-		if utxo.Amount == 546e-8 {
-			// Then this is an inscription
-			continue
-		}
-		// First non-inscription
-		cardinal = utxo
-	}
-	return nil, nil
-
 }
 
 func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint64, privKey btcec.PrivateKey, feeRate uint64, config config.Config) (*string, error) {
@@ -97,7 +73,11 @@ func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint64, p
 		}
 	}
 	if inscriptionUtxo == nil {
-		return nil, fmt.Errorf("inscription utxo not found")
+		// if inscriptionUTXO is not found, retry
+		fmt.Println("inscription utxo not found")
+		time.Sleep(1 * time.Second)
+		fmt.Println("retrying")
+		return TransferBrc20(from, to, inscriptionId, amt, privKey, feeRate, config)
 	}
 	if feeUtxo == nil {
 		return nil, fmt.Errorf("no fee utxo found")
@@ -178,6 +158,12 @@ func SendBrc20(ticker string, from, to btcutil.Address, amt, feeRate uint64, pri
 	res, err := InscribeTransfer(ticker, from, amt, feeRate, config)
 	if err != nil {
 		return "", "", err
+	}
+	if res.Inscriptions == nil || len(res.Inscriptions) == 0 {
+		// This usually means we failed to acquire ord lock
+		// Sleep and try again
+		time.Sleep(100 * time.Millisecond)
+		return SendBrc20(ticker, from, to, amt, feeRate, privKey, config)
 	}
 	inscriptionId = res.Inscriptions[0].Id
 	time.Sleep(5 * time.Second)
