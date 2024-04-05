@@ -40,46 +40,63 @@ func InscribeTransfer(ticker string, from btcutil.Address, amt, feeRate uint64, 
 	return inscriptions.Inscribe(string(bz), from.String(), feeRate, config.BtcConfig)
 }
 
-func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint64, privKey btcec.PrivateKey, feeRate uint64, config config.Config) (*string, error) {
-	fmt.Printf("--transferring brc20 from=%s to=%s", from.String(), to.String())
-	client := client.NewBitcoinClient(config)
+func getUtxos(client *client.BtcRpcClient, from btcutil.Address, inscriptionTxId string, config config.Config) (iUtxo, fUtxo common.Utxo, err error) {
 	var utxos []common.Utxo
+
 	if config.BtcConfig.ChainConfig == "mainnet" {
 		mUtxos, err := btc.GetUtxos(from.EncodeAddress(), config.BtcConfig)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		utxos = mUtxos.Result.ToUtxo()
 	} else {
 		rUtxos, err := client.GetUtxos(from)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		utxos = rUtxos.ToUtxo()
 	}
+	for i := range utxos {
+		utxo := utxos[i]
+		if fUtxo != nil && iUtxo != nil {
+			break
+		}
+		if utxo.GetValueInSats() == 546 && inscriptionTxId == utxo.GetTxID() {
+			iUtxo = utxo
+		} else if utxo.GetValueInSats() > 6500 {
+			// TODO: Check if this can be potential inscription
+			fUtxo = utxo
+		}
+	}
+	return
+}
+
+func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint64, privKey btcec.PrivateKey, feeRate uint64, config config.Config) (*string, error) {
+	fmt.Printf("--transferring brc20 from=%s to=%s", from.String(), to.String())
+	client := client.NewBitcoinClient(config)
 
 	inscriptionTxId := inscriptionId[:len(inscriptionId)-2]
 	var inscriptionUtxo common.Utxo
 	var feeUtxo common.Utxo
-	for i := range utxos {
-		utxo := utxos[i]
-		if feeUtxo != nil && inscriptionUtxo != nil {
+
+	count := 0
+	// 120 second backoff till utxo is found in the mempool
+	for {
+		if count == 120 {
+			fmt.Printf("-- Err InscriptionUtxoFound? %t  FeeUtxoFound? %t \n", inscriptionUtxo != nil, feeUtxo != nil)
+			return nil, fmt.Errorf("couldn't finalise inscription/fee UTXO within the backoff time (120s)")
+		}
+		inscriptionUtxo, feeUtxo, err := getUtxos(client, from, inscriptionTxId, config)
+		if err != nil {
+			return nil, err
+		}
+		if inscriptionUtxo != nil && feeUtxo != nil {
 			break
 		}
-		if utxo.GetValueInSats() == 546 && inscriptionTxId == utxo.GetTxID() {
-			inscriptionUtxo = utxo
-		} else if utxo.GetValueInSats() > 6500 {
-			// TODO: Check if this can be potential inscription
-			feeUtxo = utxo
-		}
-	}
-	if inscriptionUtxo == nil {
-		// if inscriptionUTXO is not found, retry
-		fmt.Println("inscription utxo not found")
+		count = count + 1
 		time.Sleep(1 * time.Second)
-		fmt.Println("retrying")
-		return TransferBrc20(from, to, inscriptionId, amt, privKey, feeRate, config)
 	}
+
 	if feeUtxo == nil {
 		return nil, fmt.Errorf("no fee utxo found")
 	}
@@ -167,8 +184,6 @@ func SendBrc20(ticker string, from, to btcutil.Address, amt, feeRate uint64, pri
 		time.Sleep(100 * time.Millisecond)
 		return SendBrc20(ticker, from, to, amt, feeRate, privKey, config)
 	}
-	inscriptionId = res.Inscriptions[0].Id
-	time.Sleep(30 * time.Second)
 	res2, err := TransferBrc20(from, to, res.Inscriptions[0].Id, amt, privKey, feeRate, config)
 	if err != nil {
 		return inscriptionId, "", err
