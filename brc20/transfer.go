@@ -135,7 +135,7 @@ func Transfer(cUtxo, iUtxo common.Utxo, sendderAddr, destAddr btcutil.Address, s
 	changeTxOut := wire.NewTxOut(int64(change), tx.SenderPkScript)
 	tx.AddTxOut(changeTxOut)
 
-	pkData := senderPubKey.SerializeCompressed()
+	pkData := senderPubKey.SerializeUncompressed()
 	sigHash0, err := tx.SigHash(0)
 	if err != nil {
 		log.Err(err).Msg("error generating sighash0")
