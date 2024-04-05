@@ -21,16 +21,16 @@ var ordNonZeroExitCodeErr = fmt.Errorf("non-zero-exit-code")
 func Inscribe(inscription, destination string, feeRate uint64, config config.BtcConfig) (res *InscriptionResultRaw, err error) {
 	count := 0
 	for {
-		if count == 10 {
-			return nil, err
-		}
 		res, err = inscribe(inscription, destination, feeRate, config)
-		if err != nil {
-			return res, nil
+
+		if res != nil || !errors.Is(err, ordNonZeroExitCodeErr) {
+			return res, err
 		}
-		if !errors.Is(err, ordNonZeroExitCodeErr) {
-			return nil, err
+		// Log retry attempt if the specific retryable error occurred
+		if count >= 9 { // Adjusted to 9 to correctly handle up to 10 retries
+			return nil, fmt.Errorf("exceeded retry attempts due to persistent error: %w", err)
 		}
+
 		log.Debug().Msg("Retrying inscribing")
 		time.Sleep(time.Second * 1)
 		count = count + 1
