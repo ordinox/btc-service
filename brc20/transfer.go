@@ -82,15 +82,18 @@ func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint64, p
 	count := 0
 	// 120 second backoff till utxo is found in the mempool
 	for {
+		fmt.Println("Finding UTXOs - Attempt ", count+1)
 		if count == 120 {
 			fmt.Printf("-- Err InscriptionUtxoFound? %t  FeeUtxoFound? %t \n", inscriptionUtxo != nil, feeUtxo != nil)
 			return nil, fmt.Errorf("couldn't finalise inscription/fee UTXO within the backoff time (120s)")
 		}
 		inscriptionUtxo, feeUtxo, err := getUtxos(client, from, inscriptionTxId, config)
 		if err != nil {
+			fmt.Printf("-- err getting utxos InscriptionUtxoFound? %t FeeUtxoFound? %t \n", inscriptionUtxo != nil, feeUtxo != nil)
 			return nil, err
 		}
 		if inscriptionUtxo != nil && feeUtxo != nil {
+			fmt.Printf("-- BREAKING InscriptionUtxoFound? %t  FeeUtxoFound? %t \n", inscriptionUtxo != nil, feeUtxo != nil)
 			break
 		}
 		count = count + 1
