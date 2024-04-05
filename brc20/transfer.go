@@ -41,6 +41,7 @@ func InscribeTransfer(ticker string, from btcutil.Address, amt, feeRate uint64, 
 }
 
 func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint64, privKey btcec.PrivateKey, feeRate uint64, config config.Config) (*string, error) {
+	fmt.Printf("--transferring brc20 from=%s to=%s", from.String(), to.String())
 	client := client.NewBitcoinClient(config)
 	var utxos []common.Utxo
 	if config.BtcConfig.ChainConfig == "mainnet" {
@@ -96,6 +97,7 @@ func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint64, p
 
 // Use UTXOs of the given wallet to transfer an inscription
 func Transfer(cUtxo, iUtxo common.Utxo, sendderAddr, destAddr btcutil.Address, senderPk *btcec.PrivateKey, senderPubKey *btcec.PublicKey, feeRate uint64, config config.Config) (string, error) {
+	fmt.Println("Transfer Called ")
 	tx, err := BuildTransferTx(cUtxo, iUtxo, sendderAddr, destAddr)
 	if err != nil {
 		log.Err(err).Msg("error building MsgTx")
@@ -166,7 +168,7 @@ func SendBrc20(ticker string, from, to btcutil.Address, amt, feeRate uint64, pri
 		return SendBrc20(ticker, from, to, amt, feeRate, privKey, config)
 	}
 	inscriptionId = res.Inscriptions[0].Id
-	time.Sleep(5 * time.Second)
+	time.Sleep(30 * time.Second)
 	res2, err := TransferBrc20(from, to, res.Inscriptions[0].Id, amt, privKey, feeRate, config)
 	if err != nil {
 		return inscriptionId, "", err
