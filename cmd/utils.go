@@ -86,3 +86,12 @@ func parseRune(runeStr string) runes.Rune {
 		TxIndex:     uint64(txIdx),
 	}
 }
+
+func parseUint64(str string) uint64 {
+	res, err := strconv.Atoi(str)
+	if err != nil {
+		fmt.Printf("Error: Invalid Number %s\n", str)
+		os.Exit(1)
+	}
+	return uint64(res)
+}
