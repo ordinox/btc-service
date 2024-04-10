@@ -36,9 +36,12 @@ func mintRunesCmd(config config.Config) (cmd *cobra.Command) {
 				os.Exit(1)
 			}
 			fmt.Println("runes minted successfully")
+			fmt.Println(rune.String())
 			fmt.Println((*hash).String())
 		},
 	}
 
+	_ = cmd.MarkFlagRequired("fee-rate")
+	_ = cmd.Flags().StringP("fee-rate", "f", "", "Fee rate for submitting transactions")
 	return
 }

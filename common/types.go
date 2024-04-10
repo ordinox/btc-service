@@ -9,7 +9,6 @@ type Utxo interface {
 }
 
 type WebUtxoResponse struct {
-	ID      string   `json:"id"`
 	Jsonrpc string   `json:"jsonrpc"`
 	Result  WebUtxos `json:"result"`
 }

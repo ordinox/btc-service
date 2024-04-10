@@ -25,8 +25,12 @@ func preRunForceArgs(argLength int) func(*cobra.Command, []string) {
 }
 
 func forceFeeRateFlag(cmd *cobra.Command) int {
-	var val string
-	cmd.Flags().StringVarP(&val, "fee-rate", "f", "", "Fee rate for submitting transactions")
+	val, err := cmd.Flags().GetString("fee-rate")
+	if err != nil {
+		fmt.Println("Error: Fee Rate not set. Use --fee-rate")
+		_ = cmd.Help()
+		os.Exit(1)
+	}
 	if val == "" {
 		fmt.Println("Error: Fee Rate not set. Use --fee-rate")
 		_ = cmd.Help()
@@ -72,7 +76,7 @@ func parseRune(runeStr string) runes.Rune {
 		os.Exit(1)
 	}
 
-	txIdx, err := strconv.Atoi(split[0])
+	txIdx, err := strconv.Atoi(split[1])
 	if err != nil {
 		fmt.Printf("Error: Invalid Rune ID %s\n", runeStr)
 		os.Exit(1)
