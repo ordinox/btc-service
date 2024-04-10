@@ -14,7 +14,6 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/ordinox/btc-service/btc"
 	"github.com/ordinox/btc-service/client"
 	"github.com/ordinox/btc-service/common"
 	"github.com/ordinox/btc-service/config"
@@ -44,7 +43,7 @@ func getUtxos(client *client.BtcRpcClient, from btcutil.Address, inscriptionTxId
 	var utxos []common.Utxo
 
 	if config.BtcConfig.ChainConfig == "mainnet" {
-		mUtxos, err := btc.GetUtxos(from.EncodeAddress(), config.BtcConfig)
+		mUtxos, err := common.GetUtxos(from.EncodeAddress(), config.BtcConfig)
 		if err != nil {
 			return nil, nil, err
 		}

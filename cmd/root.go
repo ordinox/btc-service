@@ -22,6 +22,7 @@ func Execute() {
 		getUtxosCmd(),
 		transferBtcCmd(config),
 		satsToBtcCmd(),
+		runesCmd(config),
 	)
 	err := root.Execute()
 	if err != nil {
