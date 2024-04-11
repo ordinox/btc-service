@@ -65,7 +65,7 @@ func inscribe(inscription, destination string, feeRate uint64, config config.Btc
 		return nil, err
 	}
 	if res.ExitCode != 0 {
-		log.Err(err).Msg("Non 0 exit code while sending inscription %s %v")
+		log.Error().Msgf("Non 0 exit code while sending inscription %s | %s", res.Stderr, res.Stdout)
 		return nil, ordNonZeroExitCodeErr
 	}
 

@@ -12,10 +12,11 @@ func Init() {
 		BtcConfig: BtcConfig{
 			RpcHost:        "localhost:18443",
 			CookiePath:     "/home/ubuntu/.bitcoin/regtest",
-			WalletName:     "legacy",
+			WalletName:     "w1",
 			OrdPath:        "/home/ubuntu/OPI/ord/target/release",
 			BitcoinDataDir: "/home/ubuntu/.bitcoin",
 			OrdDataDir:     "/home/ubuntu/OPI/ord/target/release",
+			ElectrumProxy:  "http://localhost:6789",
 		},
 		OpiConfig: OpiConfig{
 			Version: "0.3.0",

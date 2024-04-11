@@ -28,7 +28,7 @@ func NewBitcoinClient(config config.Config) *BtcRpcClient {
 	}
 	if _, err := client.LoadWallet(config.BtcConfig.WalletName); err != nil {
 		if !strings.Contains(err.Error(), "already loaded") {
-			log.Fatal().Err(err).Msg("error loading wallet")
+			log.Fatal().Err(err).Msgf("error loading wallet: %s", config.BtcConfig.WalletName)
 		}
 	}
 	return &BtcRpcClient{
