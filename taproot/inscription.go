@@ -16,7 +16,13 @@ func CreateP2TRInscriptionMetaData(inscription InscriptionData, privateKey *btce
 		AddOp(txscript.OP_FALSE).
 		AddOp(txscript.OP_IF).
 		AddData([]byte("ord")).
-		AddOp(txscript.OP_1).
+		// // AddOp(txscript.OP_1).
+		// AddData([]byte(inscription.ContentType)).
+		// AddOp(txscript.OP_0).
+		// AddData([]byte(inscription.Data)).
+		// AddOp(txscript.OP_ENDIF)
+		AddOp(txscript.OP_DATA_1).
+		AddOp(txscript.OP_DATA_1).
 		AddData([]byte(inscription.ContentType)).
 		AddOp(txscript.OP_0).
 		AddData([]byte(inscription.Data)).

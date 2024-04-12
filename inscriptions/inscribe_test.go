@@ -1,11 +1,10 @@
 package inscriptions
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
-	"github.com/btcsuite/btcd/btcec/v2"
-	"github.com/btcsuite/btcd/btcec/v2/schnorr"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/ordinox/btc-service/common"
 	"github.com/ordinox/btc-service/config"
@@ -14,21 +13,41 @@ import (
 
 const PK_HEX = "f80c5f4802ac331207fe47f5a36cb4a0c17a0dbd4fe57f4d1243d56e4000e79a"
 
-const DEPLOY_TXT = "{\"p\":\"brc-20\",\"op\":\"deploy\",\"tick\":\"ORDX\",\"max\":\"10000000\",\"lim\":\"10000000\"}"
-const MINT_TXT = "{\"p\":\"brc-20\",\"op\":\"mint\",\"tick\":\"ORDX\",\"amt\":\"10\"}"
+type deploy struct {
+	P    string `json:"p"`
+	Op   string `json:"op"`
+	Tick string `json:"tick"`
+	Max  string `json:"max"`
+	Lim  string `json:"lim"`
+}
+
+type mint struct {
+	P    string `json:"p"`
+	Op   string `json:"op"`
+	Tick string `json:"tick"`
+	Amt  string `json:"amt"`
+}
 
 var _ = fmt.Println
 
 func TestInscriptionCommit(t *testing.T) {
+	mint := mint{
+		P:    "brc-20",
+		Op:   "mint",
+		Tick: "opiz",
+		Amt:  "100",
+	}
+	str, _ := json.Marshal(&mint)
 	config.Init()
 	config := config.GetDefaultConfig()
 	pk := common.LoadPrivateKey(PK_HEX)
-	pk2, _ := btcec.NewPrivateKey()
-	addr2, _ := btcutil.NewAddressTaproot(schnorr.SerializePubKey(pk2.PubKey()), config.BtcConfig.GetChainConfigParams())
+	addr2Str := "moMEj6u1Eb4jXPDVKBfUVwzir2RqhbUcSc"
+	addr2, _ := btcutil.DecodeAddress(addr2Str, config.BtcConfig.GetChainConfigParams())
+	fmt.Println("Dest =", addr2.EncodeAddress())
 	_, err := InscribeNative(
 		addr2,
 		pk,
-		taproot.NewInscriptionData(MINT_TXT, taproot.ContentTypeText),
+		taproot.NewInscriptionData(string(str), taproot.ContentTypeText),
 		20,
 		config,
 	)

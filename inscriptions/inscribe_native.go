@@ -62,8 +62,7 @@ func InscribeNative(
 
 	commitTx.AddTxIn(in)
 
-	pk2, _ := btcec.NewPrivateKey()
-	inscriptionMetaData, err := taproot.CreateP2TRInscriptionMetaData(inscriptionData, pk2, config)
+	inscriptionMetaData, err := taproot.CreateP2TRInscriptionMetaData(inscriptionData, privateKey, config)
 	if err != nil {
 		return nil, fmt.Errorf("error creating inscription meta data, %s", err.Error())
 	}
@@ -137,7 +136,7 @@ func InscribeNative(
 		return nil, fmt.Errorf("error constructing witness array, %s", err.Error())
 	}
 
-	signature, err := schnorr.Sign(pk2, witnessArray)
+	signature, err := schnorr.Sign(privateKey, witnessArray)
 	if err != nil {
 		return nil, fmt.Errorf("error signing witness array, %s", err.Error())
 	}
