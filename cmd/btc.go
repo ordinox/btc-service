@@ -10,7 +10,6 @@ import (
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/ordinox/btc-service/btc"
-	"github.com/ordinox/btc-service/client"
 	"github.com/ordinox/btc-service/common"
 	"github.com/ordinox/btc-service/config"
 	"github.com/spf13/cobra"
@@ -114,34 +113,15 @@ func getUtxosCmd() *cobra.Command {
 		Short: "get utxos for a legacy",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if config.GetDefaultConfig().BtcConfig.ChainConfig == "mainnet" {
-				// Get utxos using electrum
-				utxos, err := common.GetUtxos(args[0], config.GetDefaultConfig().BtcConfig)
-				if err != nil {
-					return err
-				}
-				for _, u := range utxos.Result {
-					fmt.Println("hash: ", u.TxHash)
-					fmt.Println("pos: ", u.Vout)
-					fmt.Println("val: ", u.Value)
-					fmt.Println("---------------")
-				}
-				return nil
-			}
-			addr, err := btcutil.DecodeAddress(args[0], config.GetDefaultConfig().BtcConfig.GetChainConfigParams())
+			// Get utxos using electrum
+			utxos, err := common.GetUtxos(args[0], config.GetDefaultConfig().BtcConfig)
 			if err != nil {
 				return err
 			}
-			client := client.NewBitcoinClient(config.GetDefaultConfig())
-			utxos, err := client.GetUtxos(addr)
-			if err != nil {
-				return err
-			}
-			for _, u := range utxos {
-				utxo := u
-				fmt.Println("hash: ", utxo.GetTxID())
-				fmt.Println("pos: ", utxo.GetVout())
-				fmt.Println("val: ", utxo.GetValueInSats())
+			for _, u := range utxos.Result {
+				fmt.Println("hash: ", u.TxHash)
+				fmt.Println("pos: ", u.Vout)
+				fmt.Println("val: ", u.Value)
 				fmt.Println("---------------")
 			}
 			return nil
@@ -182,35 +162,18 @@ func transferBtcCmd(config config.Config) *cobra.Command {
 			}
 			privKey, _ := btcec.PrivKeyFromBytes(privKeyB)
 			var selectedUtxo common.Utxo
-			if config.BtcConfig.ChainConfig == "mainnet" {
-				utxos, err := common.GetUtxos(fromAddr.EncodeAddress(), config.BtcConfig)
-				if err != nil {
-					return err
+			utxos, err := common.GetUtxos(fromAddr.EncodeAddress(), config.BtcConfig)
+			if err != nil {
+				return err
+			}
+			for _, utxo := range utxos.Result {
+				if utxo.Value > uint64(amt) {
+					selectedUtxo = utxo
+					continue
 				}
-				for _, utxo := range utxos.Result {
-					if utxo.Value > uint64(amt) {
-						selectedUtxo = utxo
-						continue
-					}
-				}
-				if selectedUtxo == nil {
-					return fmt.Errorf("no valid utxo found for the amt. UTXO count=%d", len(utxos.Result))
-				}
-			} else {
-				client := client.NewBitcoinClient(config)
-				utxos, err := client.GetUtxos(fromAddr)
-				if err != nil {
-					return err
-				}
-				for _, u := range utxos {
-					if u.GetValueInSats() > uint64(amt) {
-						selectedUtxo = u
-						continue
-					}
-				}
-				if selectedUtxo == nil {
-					return fmt.Errorf("no valid utxo found for the amt. UTXO count=%d", len(utxos))
-				}
+			}
+			if selectedUtxo == nil {
+				return fmt.Errorf("no valid utxo found for the amt. UTXO count=%d", len(utxos.Result))
 			}
 
 			err = btc.TransferBtc(

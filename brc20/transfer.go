@@ -44,26 +44,17 @@ func InscribeTransfer(ticker string, amt uint64, destination btcutil.Address, pr
 
 func getUtxos(client *client.BtcRpcClient, from btcutil.Address, inscriptionTxId string, config config.Config) (iUtxo, fUtxo common.Utxo, err error) {
 	var utxos []common.Utxo
-
-	if config.BtcConfig.ChainConfig == "mainnet" {
-		mUtxos, err := common.GetUtxos(from.EncodeAddress(), config.BtcConfig)
-		if err != nil {
-			return nil, nil, err
-		}
-		utxos = mUtxos.Result.ToUtxo()
-	} else {
-		rUtxos, err := client.GetUtxos(from)
-		if err != nil {
-			return nil, nil, err
-		}
-		utxos = rUtxos.ToUtxo()
+	mUtxos, err := common.GetUtxos(from.EncodeAddress(), config.BtcConfig)
+	if err != nil {
+		return nil, nil, err
 	}
+	utxos = mUtxos.Result.ToUtxo()
 	for i := range utxos {
 		utxo := utxos[i]
 		if fUtxo != nil && iUtxo != nil {
 			break
 		}
-		if utxo.GetValueInSats() == 546 && inscriptionTxId == utxo.GetTxID() {
+		if inscriptionTxId == utxo.GetTxID() {
 			iUtxo = utxo
 		} else if utxo.GetValueInSats() > 6500 {
 			// TODO: Check if this can be potential inscription
@@ -96,7 +87,7 @@ func TransferBrc20(from, to btcutil.Address, inscriptionId string, privKey *btce
 			return nil, err
 		}
 		if inscriptionUtxo != nil && feeUtxo != nil {
-			fmt.Printf("-- BREAKING InscriptionUtxoFound? %t  FeeUtxoFound? %t \n", inscriptionUtxo != nil, feeUtxo != nil)
+			fmt.Printf("utxos found")
 			break
 		}
 		count = count + 1
@@ -119,9 +110,13 @@ func TransferBrc20(from, to btcutil.Address, inscriptionId string, privKey *btce
 }
 
 // Use UTXOs of the given wallet to transfer an inscription
-func Transfer(cUtxo, iUtxo common.Utxo, sendderAddr, destAddr btcutil.Address, senderPk *btcec.PrivateKey, senderPubKey *btcec.PublicKey, feeRate uint64, config config.Config) (string, error) {
+func Transfer(cUtxo, iUtxo common.Utxo, senderAddr, destAddr btcutil.Address, senderPk *btcec.PrivateKey, senderPubKey *btcec.PublicKey, feeRate uint64, config config.Config) (string, error) {
 	fmt.Println("Transfer Called ")
-	tx, err := BuildTransferTx(cUtxo, iUtxo, sendderAddr, destAddr)
+	senderAddr, senderPkData, err := common.VerifyPrivateKey(senderPk, senderAddr, config.BtcConfig.GetChainConfigParams())
+	if err != nil {
+		return "", fmt.Errorf("error verifying privatekey: %s", err.Error())
+	}
+	tx, err := BuildTransferTx(cUtxo, iUtxo, senderAddr, destAddr)
 	if err != nil {
 		log.Err(err).Msg("error building MsgTx")
 		return "", err
@@ -137,7 +132,6 @@ func Transfer(cUtxo, iUtxo common.Utxo, sendderAddr, destAddr btcutil.Address, s
 	changeTxOut := wire.NewTxOut(int64(change), tx.SenderPkScript)
 	tx.AddTxOut(changeTxOut)
 
-	pkData := senderPubKey.SerializeUncompressed()
 	sigHash0, err := tx.SigHash(0)
 	if err != nil {
 		log.Err(err).Msg("error generating sighash0")
@@ -146,7 +140,7 @@ func Transfer(cUtxo, iUtxo common.Utxo, sendderAddr, destAddr btcutil.Address, s
 
 	sig0 := ecdsa.Sign(senderPk, sigHash0).Serialize()
 	sig0 = append(sig0, byte(txscript.SigHashAll))
-	sigScript0, err := txscript.NewScriptBuilder().AddData(sig0).AddData(pkData).Script()
+	sigScript0, err := txscript.NewScriptBuilder().AddData(sig0).AddData(senderPkData).Script()
 	if err != nil {
 		log.Err(err).Msg("error building sigScript0")
 		return "", err
@@ -160,7 +154,7 @@ func Transfer(cUtxo, iUtxo common.Utxo, sendderAddr, destAddr btcutil.Address, s
 	}
 	sig1 := ecdsa.Sign(senderPk, sigHash1).Serialize()
 	sig1 = append(sig1, byte(txscript.SigHashAll))
-	sigScript1, err := txscript.NewScriptBuilder().AddData(sig1).AddData(pkData).Script()
+	sigScript1, err := txscript.NewScriptBuilder().AddData(sig1).AddData(senderPkData).Script()
 	if err != nil {
 		log.Err(err).Msg("error building sigScript1")
 	}

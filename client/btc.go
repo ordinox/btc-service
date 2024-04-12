@@ -3,9 +3,7 @@ package client
 import (
 	"strings"
 
-	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/rpcclient"
-	"github.com/ordinox/btc-service/common"
 	"github.com/ordinox/btc-service/config"
 	"github.com/rs/zerolog/log"
 )
@@ -35,40 +33,4 @@ func NewBitcoinClient(config config.Config) *BtcRpcClient {
 		Client:          client,
 		TrackedAddreses: make(map[string]bool),
 	}
-}
-
-func (r *BtcRpcClient) ImportAddress(address string) error {
-	log.Info().Msgf("importing new addr: %s", address)
-	r.TrackedAddreses[strings.ToLower(address)] = true
-	err := r.Client.ImportAddress(address)
-	if err != nil {
-		log.Err(err).Msg("error importing address")
-	}
-	return err
-}
-
-func GetWebUtxo(addr string) []common.WebUtxo {
-	return nil
-}
-
-func (r *BtcRpcClient) GetUtxos(addr btcutil.Address) (common.BtcUnspents, error) {
-	if r.TrackedAddreses == nil {
-		r.TrackedAddreses = make(map[string]bool)
-	}
-	if _, ok := r.TrackedAddreses[strings.ToLower(addr.String())]; !ok {
-		if err := r.ImportAddress(addr.String()); err != nil {
-			return nil, err
-		}
-	}
-	unspent, err := r.ListUnspent()
-	if err != nil {
-		return nil, err
-	}
-	utxos := make([]common.BtcUnspent, 0)
-	for _, utxo := range unspent {
-		if utxo.Address == addr.String() {
-			utxos = append(utxos, common.NewBtcUnspent(utxo))
-		}
-	}
-	return utxos, nil
 }

@@ -6,7 +6,6 @@ import (
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/ordinox/btc-service/client"
 	"github.com/ordinox/btc-service/common"
 	"github.com/ordinox/btc-service/config"
 )
@@ -40,15 +39,12 @@ func TestTransf(t *testing.T) {
 	fmt.Println("Sender", senderAddr.EncodeAddress())
 	fmt.Println("Destination", destinationAddr.EncodeAddress())
 
-	client := client.NewBitcoinClient(config.GetDefaultConfig())
-	utxos, err := client.GetUtxos(senderAddr)
-	for _, utxo := range utxos {
-		fmt.Printf("%s - %f\n", utxo.TxID, utxo.Amount)
-	}
+	utxos, err := common.GetUtxos(senderAddr.EncodeAddress(), config.GetDefaultConfig().BtcConfig)
+	cUtxos := utxos.Result.ToUtxo()
 	if err != nil {
 		panic(err)
 	}
-	_, err = Transfer(utxos[0], utxos[2], senderAddr, destinationAddr, senderPk, senderPk.PubKey(), 25, config.GetDefaultConfig())
+	_, err = Transfer(cUtxos[0], cUtxos[2], senderAddr, destinationAddr, senderPk, senderPk.PubKey(), 25, config.GetDefaultConfig())
 	if err != nil {
 		panic(err)
 	}
