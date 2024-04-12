@@ -56,7 +56,7 @@ func e2eCmd(config config.Config) *cobra.Command {
 
 			fmt.Println("transferring inscription...")
 
-			res, err := brc20.TransferBrc20(fromAddr, toAddr, transferInscription, senderPrivateKey, uint64(feeRate), config)
+			res, err := brc20.TransferInscription(fromAddr, toAddr, transferInscription, senderPrivateKey, uint64(feeRate), config)
 			if err != nil {
 				fmt.Println("Error occured while transferring")
 				fmt.Println(err.Error())
@@ -88,7 +88,7 @@ func transferCmd(config config.Config) *cobra.Command {
 			toAddr := parseBtcAddress(args[1], config)
 			transferInscription := parseString(args[2])
 			privateKey := parsePrivateKey(args[3])
-			hashPtr, err := brc20.TransferBrc20(fromAddr, toAddr, transferInscription, privateKey, uint64(feeRate), config)
+			hashPtr, err := brc20.TransferInscription(fromAddr, toAddr, transferInscription, privateKey, uint64(feeRate), config)
 			if err != nil {
 				fmt.Println("Error occured while transferring")
 				fmt.Println(err.Error())

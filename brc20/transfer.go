@@ -30,6 +30,7 @@ type transfer struct {
 	Amt  string `json:"amt"`
 }
 
+// Inscribe a "transfer inscription" into the "destination" address
 func InscribeTransfer(ticker string, amt uint64, destination btcutil.Address, privateKey *btcec.PrivateKey, feeRate uint64, config config.Config) (*inscriptions.SingleInscriptionResult, error) {
 	transfer := transfer{
 		P:    "brc-20",
@@ -64,7 +65,9 @@ func getUtxos(client *client.BtcRpcClient, from btcutil.Address, inscriptionTxId
 	return
 }
 
-func TransferBrc20(from, to btcutil.Address, inscriptionId string, privKey *btcec.PrivateKey, feeRate uint64, config config.Config) (*string, error) {
+// Given an inscription ID, transfer a that inscription to a new address
+// Note: From Address has to be a P2PKH address
+func TransferInscription(from, to btcutil.Address, inscriptionId string, privKey *btcec.PrivateKey, feeRate uint64, config config.Config) (*string, error) {
 	fmt.Printf("--transferring brc20 from=%s to=%s", from.String(), to.String())
 	client := client.NewBitcoinClient(config)
 
@@ -107,7 +110,8 @@ func TransferBrc20(from, to btcutil.Address, inscriptionId string, privKey *btce
 	return &hash, nil
 }
 
-// Use UTXOs of the given wallet to transfer an inscription
+// Transfer the given UTXOs from the "from" address to the "to" address
+// Note: "from" address has to be a P2PKH address
 func Transfer(cUtxo, iUtxo common.Utxo, senderAddr, destAddr btcutil.Address, senderPk *btcec.PrivateKey, senderPubKey *btcec.PublicKey, feeRate uint64, config config.Config) (string, error) {
 	fmt.Println("Transfer Called ")
 	senderAddr, senderPkData, err := common.VerifyPrivateKey(senderPk, senderAddr, config.BtcConfig.GetChainConfigParams())
@@ -171,12 +175,16 @@ func Transfer(cUtxo, iUtxo common.Utxo, senderAddr, destAddr btcutil.Address, se
 	return h.String(), nil
 }
 
+// Full suite of Inscribing a BRC20 transfer into the "from" address
+// Transferring the Transfer Inscription from the "from" address to the "to" address
+// Note: inscriberPrivateKey's P2TR address needs to have UTXOs for inscribing a transfer inscription
+// And, "from" address should be P2PKH address
 func SendBrc20(ticker string, from, to btcutil.Address, amt, feeRate uint64, inscriberPrivateKey, senderPrivateKey *btcec.PrivateKey, config config.Config) (inscriptionId, hash string, err error) {
 	res, err := InscribeTransfer(ticker, amt, from, inscriberPrivateKey, feeRate, config)
 	if err != nil {
 		return "", "", err
 	}
-	hashPtr, err := TransferBrc20(from, to, res.RevealTx, senderPrivateKey, feeRate, config)
+	hashPtr, err := TransferInscription(from, to, res.RevealTx, senderPrivateKey, feeRate, config)
 	if err != nil {
 		return inscriptionId, "", err
 	}
@@ -188,6 +196,7 @@ func SendBrc20(ticker string, from, to btcutil.Address, amt, feeRate uint64, ins
 
 // 89e68ee66bbed960bd2ac69159bce2d188c8a1e19c6196de7ce3e7dfe91ecb9e
 
+// Build a raw unsigned `wire.MsgTx` object for transferring an inscription UTXO to the destination address
 func BuildTransferTx(cardinalUtxo, inscriptionUtxo common.Utxo, senderAddr, destinationAddr btcutil.Address) (*common.WrappedTx, error) {
 	tx := wire.NewMsgTx(wire.TxVersion)
 	destinationAddrScript, err := txscript.PayToAddrScript(destinationAddr)
@@ -213,7 +222,3 @@ func BuildTransferTx(cardinalUtxo, inscriptionUtxo common.Utxo, senderAddr, dest
 		SenderPkScript: senderAddrScript,
 	}, nil
 }
-
-func ListInscriptionUtxos() {}
-
-func ListCardinalUtxo() {}
