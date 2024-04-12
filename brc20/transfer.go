@@ -102,11 +102,9 @@ func TransferBrc20(from, to btcutil.Address, inscriptionId string, privKey *btce
 	if err != nil {
 		return nil, err
 	}
-	res := "transfer complete with hash: " + hash
-
 	// fmt.Println(hash.String())
 
-	return &res, nil
+	return &hash, nil
 }
 
 // Use UTXOs of the given wallet to transfer an inscription
@@ -173,16 +171,17 @@ func Transfer(cUtxo, iUtxo common.Utxo, senderAddr, destAddr btcutil.Address, se
 	return h.String(), nil
 }
 
-func SendBrc20(ticker string, from, to btcutil.Address, amt, feeRate uint64, privKey *btcec.PrivateKey, config config.Config) (inscriptionId, hash string, err error) {
-	res, err := InscribeTransfer(ticker, amt, from, privKey, feeRate, config)
+func SendBrc20(ticker string, from, to btcutil.Address, amt, feeRate uint64, inscriberPrivateKey, senderPrivateKey *btcec.PrivateKey, config config.Config) (inscriptionId, hash string, err error) {
+	res, err := InscribeTransfer(ticker, amt, from, inscriberPrivateKey, feeRate, config)
 	if err != nil {
 		return "", "", err
 	}
-	res2, err := TransferBrc20(from, to, res.RevealTx, privKey, feeRate, config)
+	hashPtr, err := TransferBrc20(from, to, res.RevealTx, senderPrivateKey, feeRate, config)
 	if err != nil {
 		return inscriptionId, "", err
 	}
-	hash = *res2
+	inscriptionId = res.RevealTx
+	hash = *hashPtr
 	err = nil
 	return
 }
