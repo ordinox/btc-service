@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/ordinox/btc-service/config"
 	"github.com/ordinox/btc-service/inscriptions"
+	"github.com/ordinox/btc-service/taproot"
 )
 
 type mint struct {
@@ -15,7 +18,7 @@ type mint struct {
 	Amt  string `json:"amt"`
 }
 
-func InscribeMint(ticker string, cap uint, destination string, feeRate uint64, config config.BtcConfig) (*inscriptions.InscriptionResultRaw, error) {
+func InscribeMint(ticker string, cap uint64, destination btcutil.Address, privateKey *btcec.PrivateKey, feeRate uint64, config config.Config) (*inscriptions.SingleInscriptionResult, error) {
 	mint := mint{
 		P:    "brc-20",
 		Op:   "mint",
@@ -24,6 +27,6 @@ func InscribeMint(ticker string, cap uint, destination string, feeRate uint64, c
 	}
 
 	bz, _ := json.Marshal(mint)
-	inscription := string(bz)
-	return inscriptions.Inscribe(inscription, destination, feeRate, config)
+	inscription := taproot.NewInscriptionData(string(bz), taproot.ContentTypeText)
+	return inscriptions.InscribeNative(destination, privateKey, inscription, feeRate, config)
 }

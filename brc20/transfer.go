@@ -7,6 +7,7 @@ package brc20
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/btcsuite/btcd/btcec/v2"
@@ -18,6 +19,7 @@ import (
 	"github.com/ordinox/btc-service/common"
 	"github.com/ordinox/btc-service/config"
 	"github.com/ordinox/btc-service/inscriptions"
+	"github.com/ordinox/btc-service/taproot"
 	"github.com/rs/zerolog/log"
 )
 
@@ -28,7 +30,7 @@ type transfer struct {
 	Amt  string `json:"amt"`
 }
 
-func InscribeTransfer(ticker string, from btcutil.Address, amt, feeRate uint64, config config.Config) (*inscriptions.InscriptionResultRaw, error) {
+func InscribeTransfer(ticker string, amt uint64, destination btcutil.Address, privateKey *btcec.PrivateKey, feeRate uint64, config config.Config) (*inscriptions.SingleInscriptionResult, error) {
 	transfer := transfer{
 		P:    "brc-20",
 		Op:   "transfer",
@@ -36,7 +38,8 @@ func InscribeTransfer(ticker string, from btcutil.Address, amt, feeRate uint64, 
 		Amt:  fmt.Sprintf("%d", amt),
 	}
 	bz, _ := json.Marshal(transfer)
-	return inscriptions.Inscribe(string(bz), from.String(), feeRate, config.BtcConfig)
+	inscription := taproot.NewInscriptionData(string(bz), taproot.ContentTypeText)
+	return inscriptions.InscribeNative(destination, privateKey, inscription, feeRate, config)
 }
 
 func getUtxos(client *client.BtcRpcClient, from btcutil.Address, inscriptionTxId string, config config.Config) (iUtxo, fUtxo common.Utxo, err error) {
@@ -70,11 +73,11 @@ func getUtxos(client *client.BtcRpcClient, from btcutil.Address, inscriptionTxId
 	return
 }
 
-func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint64, privKey btcec.PrivateKey, feeRate uint64, config config.Config) (*string, error) {
+func TransferBrc20(from, to btcutil.Address, inscriptionId string, privKey *btcec.PrivateKey, feeRate uint64, config config.Config) (*string, error) {
 	fmt.Printf("--transferring brc20 from=%s to=%s", from.String(), to.String())
 	client := client.NewBitcoinClient(config)
 
-	inscriptionTxId := inscriptionId[:len(inscriptionId)-2]
+	inscriptionTxId := strings.TrimRight(inscriptionId, "i0")
 	var inscriptionUtxo common.Utxo
 	var feeUtxo common.Utxo
 
@@ -104,7 +107,7 @@ func TransferBrc20(from, to btcutil.Address, inscriptionId string, amt uint64, p
 		return nil, fmt.Errorf("no fee utxo found")
 	}
 
-	hash, err := Transfer(feeUtxo, inscriptionUtxo, from, to, &privKey, privKey.PubKey(), feeRate, config)
+	hash, err := Transfer(feeUtxo, inscriptionUtxo, from, to, privKey, privKey.PubKey(), feeRate, config)
 	if err != nil {
 		return nil, err
 	}
@@ -176,18 +179,12 @@ func Transfer(cUtxo, iUtxo common.Utxo, sendderAddr, destAddr btcutil.Address, s
 	return h.String(), nil
 }
 
-func SendBrc20(ticker string, from, to btcutil.Address, amt, feeRate uint64, privKey btcec.PrivateKey, config config.Config) (inscriptionId, hash string, err error) {
-	res, err := InscribeTransfer(ticker, from, amt, feeRate, config)
+func SendBrc20(ticker string, from, to btcutil.Address, amt, feeRate uint64, privKey *btcec.PrivateKey, config config.Config) (inscriptionId, hash string, err error) {
+	res, err := InscribeTransfer(ticker, amt, from, privKey, feeRate, config)
 	if err != nil {
 		return "", "", err
 	}
-	if res.Inscriptions == nil || len(res.Inscriptions) == 0 {
-		// This usually means we failed to acquire ord lock
-		// Sleep and try again
-		time.Sleep(100 * time.Millisecond)
-		return SendBrc20(ticker, from, to, amt, feeRate, privKey, config)
-	}
-	res2, err := TransferBrc20(from, to, res.Inscriptions[0].Id, amt, privKey, feeRate, config)
+	res2, err := TransferBrc20(from, to, res.RevealTx, privKey, feeRate, config)
 	if err != nil {
 		return inscriptionId, "", err
 	}

@@ -2,10 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
+	"os"
 
-	"github.com/btcsuite/btcd/btcutil"
 	"github.com/ordinox/btc-service/brc20"
 	"github.com/ordinox/btc-service/client"
 	"github.com/ordinox/btc-service/config"
@@ -20,9 +18,7 @@ func brc20Cmd(config config.Config) *cobra.Command {
 	}
 	brc20Cmd.AddCommand(
 		getBalance(config.OpiConfig),
-		inscribeDeployCmd(config.BtcConfig),
-		inscribeMintCmd(config.BtcConfig),
-		inscribeTransferCmd(config),
+		brc20InscribeCmd(config),
 		transferCmd(config),
 		e2eCmd(config),
 		sendBrc20Cmd(config),
@@ -30,15 +26,27 @@ func brc20Cmd(config config.Config) *cobra.Command {
 	return &brc20Cmd
 }
 
+func brc20InscribeCmd(config config.Config) *cobra.Command {
+	brc20InscribeCmd := cobra.Command{
+		Use:   "inscribe",
+		Short: "inscribe brc20 inscriptions",
+	}
+	_ = brc20InscribeCmd.MarkFlagRequired("fee-rate")
+	_ = brc20InscribeCmd.Flags().StringP("fee-rate", "f", "", "Fee rate for submitting transactions")
+	_ = brc20InscribeCmd.PersistentFlags().StringP("fee-rate", "f", "", "Fee rate for submitting transactions")
+	brc20InscribeCmd.AddCommand(
+		inscribeDeployCmd(config),
+		inscribeMintCmd(config),
+		inscribeTransferCmd(config),
+	)
+	return &brc20InscribeCmd
+}
+
 func getBalance(config config.OpiConfig) *cobra.Command {
 	getBalanceCmd := cobra.Command{
 		Use:   "balance  [ticker] [address]",
 		Short: "get brc20 balance for a token",
-		Long: strings.TrimSpace(`
-Example:
-brc20 balance <TICKER> <ADDRESS>
-		`),
-		Args: cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if args[0] == "" {
 				return fmt.Errorf("ticker name cannot be empty")
@@ -59,76 +67,53 @@ brc20 balance <TICKER> <ADDRESS>
 	return &getBalanceCmd
 }
 
-func inscribeDeployCmd(config config.BtcConfig) *cobra.Command {
+func inscribeDeployCmd(config config.Config) *cobra.Command {
 	deployCmd := cobra.Command{
-		Use:   "inscribe-deploy [ticker] [supply] [destination] [fee-rate]",
-		Short: "deploy a brc20 token",
-		Long: strings.TrimSpace(`
-Example: 
-brc20 deploy <TICKER> <SUPPLY> <DESTINATION_ADDR>
-		`),
-		Args: cobra.ExactArgs(4),
+		Use:    "deploy TICKER SUPPLY DESTINATION_ADDR SENDER_PRIVATE_KEY",
+		Short:  "deploy a brc20 token",
+		PreRun: preRunForceArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if args[0] == "" {
-				return fmt.Errorf("ticker name cannot be empty")
-			}
-			if args[1] == "" {
-				return fmt.Errorf("token supply/limit cannot be empty")
-			}
-			if args[2] == "" {
-				return fmt.Errorf("destination cannot be empty")
-			}
-			amt, err := strconv.Atoi(args[1])
+			feeRate := forceFeeRateFlag(cmd)
+			ticker := parseTicker(args[0])
+			supply := parseUint64(args[1])
+			addr := parseBtcAddress(args[2], config)
+			privateKey := parsePrivateKey(args[3])
+
+			insc, err := brc20.InscribeDeploy(ticker, uint(supply), privateKey, addr, uint64(feeRate), config)
 			if err != nil {
-				return err
+				fmt.Println("Error occured while deploying")
+				fmt.Println(err.Error())
+				os.Exit(1)
 			}
-			feeRate, err := strconv.Atoi(args[3])
-			if err != nil {
-				return err
-			}
-			insc, err := brc20.InscribeDeploy(args[0], uint(amt), args[2], uint64(feeRate), config)
-			if err != nil {
-				return err
-			}
-			printInscriptionRes(insc)
+			fmt.Println("CommitTx:", insc.CommitTx)
+			fmt.Println("RevelTx:", insc.RevealTx)
+			fmt.Println("Fee:", insc.TotalFeePaid)
 			return nil
 		},
 	}
 	return &deployCmd
 }
 
-func inscribeMintCmd(config config.BtcConfig) *cobra.Command {
+func inscribeMintCmd(config config.Config) *cobra.Command {
 	mintCmd := cobra.Command{
-		Use:   "inscribe-mint [ticker] [amount] [destination] [fee-rate]",
-		Short: "mint a brc20 token",
-		Long: strings.TrimSpace(`
-Example: 
-brc20 mint <TICKER> <AMOUNT> <DESTINATION_ADDR>
-		`),
-		Args: cobra.ExactArgs(4),
+		Use:    "mint TICKER AMT DESTINATION_ADDR SENDER_PRIVATE_KEY",
+		Short:  "mint a brc20 token",
+		PreRun: preRunForceArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if args[0] == "" {
-				return fmt.Errorf("ticker name cannot be empty")
-			}
-			if args[1] == "" {
-				return fmt.Errorf("mint amount cannot be empty")
-			}
-			if args[2] == "" {
-				return fmt.Errorf("destination cannot be empty")
-			}
-			amt, err := strconv.Atoi(args[1])
+			feeRate := forceFeeRateFlag(cmd)
+			ticker := parseTicker(args[0])
+			amt := parseUint64(args[1])
+			addr := parseBtcAddress(args[2], config)
+			privateKey := parsePrivateKey(args[3])
+			insc, err := brc20.InscribeMint(ticker, amt, addr, privateKey, uint64(feeRate), config)
 			if err != nil {
-				return err
+				fmt.Println("Error occured while minting")
+				fmt.Println(err.Error())
+				os.Exit(1)
 			}
-			feeRate, err := strconv.Atoi(args[3])
-			if err != nil {
-				return err
-			}
-			insc, err := brc20.InscribeMint(args[0], uint(amt), args[2], uint64(feeRate), config)
-			if err != nil {
-				return err
-			}
-			printInscriptionRes(insc)
+			fmt.Println("CommitTx:", insc.CommitTx)
+			fmt.Println("RevelTx:", insc.RevealTx)
+			fmt.Println("Fee:", insc.TotalFeePaid)
 			return nil
 		},
 	}
@@ -137,37 +122,26 @@ brc20 mint <TICKER> <AMOUNT> <DESTINATION_ADDR>
 
 func inscribeTransferCmd(config config.Config) *cobra.Command {
 	transferCmd := cobra.Command{
-		Use:        "inscribe-transfer [fromAddr] [ticker] [amt] [fee-rate]",
-		Args:       cobra.MatchAll(cobra.ExactArgs(4)),
-		ArgAliases: []string{"fromAddr", "ticker", "amt"},
-		ValidArgs:  []string{"fromAddr", "ticker", "amt"},
-		Short:      "transfer brc20 tokens from the given address to another",
+		Use:    "transfer TICKER AMT DESTINATION_ADDR SENDER_PRIVATE_KEY",
+		Args:   cobra.MatchAll(cobra.ExactArgs(4)),
+		Short:  "transfer brc20 tokens from the given address to another",
+		PreRun: preRunForceArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fromAddr, err := btcutil.DecodeAddress(args[0], config.BtcConfig.GetChainConfigParams())
-			if err != nil {
-				return err
-			}
-			ticker := args[1]
-			if strings.TrimSpace(ticker) == "" {
-				return fmt.Errorf("ticker cannot be empty")
-			}
+			feeRate := forceFeeRateFlag(cmd)
+			ticker := parseTicker(args[0])
+			amt := parseUint64(args[1])
+			addr := parseBtcAddress(args[2], config)
+			privateKey := parsePrivateKey(args[3])
 
-			amt, err := strconv.Atoi(args[2])
+			insc, err := brc20.InscribeTransfer(ticker, amt, addr, privateKey, uint64(feeRate), config)
 			if err != nil {
-				return err
+				fmt.Println("Error occured while inscribing transfer")
+				fmt.Println(err.Error())
+				os.Exit(1)
 			}
-
-			feeRate, err := strconv.Atoi(args[3])
-			if err != nil {
-				return err
-			}
-
-			inscriptionsRes, err := brc20.InscribeTransfer(ticker, fromAddr, uint64(amt), uint64(feeRate), config)
-			if err != nil {
-				return err
-			}
-			printInscriptionRes(inscriptionsRes)
-
+			fmt.Println("CommitTx:", insc.CommitTx)
+			fmt.Println("RevelTx:", insc.RevealTx)
+			fmt.Println("Fee:", insc.TotalFeePaid)
 			return nil
 		},
 	}

@@ -95,3 +95,19 @@ func parseUint64(str string) uint64 {
 	}
 	return uint64(res)
 }
+
+func parseTicker(str string) string {
+	if len(str) != 4 {
+		fmt.Printf("Error: Invalid Ticker %s\n", str)
+		os.Exit(1)
+	}
+	return str
+}
+
+func parseString(str string) string {
+	if len(str) == 0 {
+		fmt.Printf("Error: Invalid String %s\n", str)
+		os.Exit(1)
+	}
+	return str
+}

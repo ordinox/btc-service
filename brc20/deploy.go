@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/ordinox/btc-service/config"
 	"github.com/ordinox/btc-service/inscriptions"
+	"github.com/ordinox/btc-service/taproot"
 )
 
 type deploy struct {
@@ -16,7 +19,7 @@ type deploy struct {
 	Lim  string `json:"lim"`
 }
 
-func InscribeDeploy(ticker string, cap uint, destination string, feeRate uint64, config config.BtcConfig) (*inscriptions.InscriptionResultRaw, error) {
+func InscribeDeploy(ticker string, cap uint, privateKey *btcec.PrivateKey, receiver btcutil.Address, feeRate uint64, config config.Config) (*inscriptions.SingleInscriptionResult, error) {
 	deploy := deploy{
 		P:    "brc-20",
 		Op:   "deploy",
@@ -26,6 +29,6 @@ func InscribeDeploy(ticker string, cap uint, destination string, feeRate uint64,
 	}
 
 	bz, _ := json.Marshal(deploy)
-	inscription := string(bz)
-	return inscriptions.Inscribe(inscription, destination, feeRate, config)
+	inscriptionData := taproot.NewInscriptionData(string(bz), taproot.ContentTypeText)
+	return inscriptions.InscribeNative(receiver, privateKey, inscriptionData, feeRate, config)
 }

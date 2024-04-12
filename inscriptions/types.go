@@ -13,3 +13,9 @@ type InscriptionResultRaw struct {
 		Id string `json:"id"`
 	} `json:"inscriptions"`
 }
+
+type SingleInscriptionResult struct {
+	CommitTx     string
+	RevealTx     string
+	TotalFeePaid int64
+}

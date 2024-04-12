@@ -25,14 +25,13 @@ func InscribeNative(
 	inscriptionData taproot.InscriptionData,
 	feeRate uint64,
 	config config.Config,
-) (any, error) {
+) (*SingleInscriptionResult, error) {
 	commitTx := btc.NewMsgTx(int32(btc.TxVersion))
 	client := client.NewBitcoinClient(config)
 	fromAddr, err := btc.NewAddressTaproot(schnorr.SerializePubKey(txscript.ComputeTaprootKeyNoScript(privateKey.PubKey())), config.BtcConfig.GetChainConfigParams())
 	if err != nil {
 		return nil, fmt.Errorf("error deriving taproot addresss, %s", err.Error())
 	}
-	fmt.Printf("fromAddr=%s\n", fromAddr.EncodeAddress())
 	utxo, err := common.SelectOneUtxo(fromAddr.EncodeAddress(), 1000, config.BtcConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error selecting utxo, %s", err.Error())
@@ -76,7 +75,7 @@ func InscribeNative(
 
 	fee := btc.Amount(btc.GetTxVSize(btc.NewTx(commitTx)) * int64(feeRate))
 	payForward := fee + 546
-	changeAmount := totalSenderAmt - fee - payForward
+	changeAmount := totalSenderAmt - fee - payForward - 100 // 100 is the buffer amt to get the commit tx before the reveal tx
 
 	if changeAmount < 1 {
 		return nil, fmt.Errorf("selected UTXO has insufficient balance, %s", err.Error())
@@ -155,11 +154,14 @@ func InscribeNative(
 
 	h2, err := client.SendRawTransaction(revealTx, true)
 	if err != nil {
-		panic(err)
 		return nil, fmt.Errorf("error sending reveal tx, %s", err.Error())
 	}
-	fmt.Println("Reveal Tx:", (*h2).String())
-	return nil, nil
+	result := &SingleInscriptionResult{
+		TotalFeePaid: int64(fee) + int64(fee) - 546,
+		CommitTx:     (*h1).String(),
+		RevealTx:     (*h2).String(),
+	}
+	return result, nil
 }
 
 func GetTxData(client *client.BtcRpcClient, hash string) (btc.TxData, error) {
