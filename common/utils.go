@@ -16,7 +16,8 @@ func LoadPrivateKey(pkHex string) *btcec.PrivateKey {
 }
 
 // Verify that the address belongs to the private key, regardless of pubkey compression
-func VerifyPrivateKey(privateKey *btcec.PrivateKey, addr btcutil.Address, chainCfg *chaincfg.Params) (btcutil.Address, []byte, error) {
+// P2PKH (Compressed or Uncompressed)
+func VerifyPrivateKey(privateKey *btcec.PrivateKey, p2pkhAddr btcutil.Address, chainCfg *chaincfg.Params) (btcutil.Address, []byte, error) {
 	pubkey := privateKey.PubKey()
 	pubkeyData := pubkey.SerializeCompressed()
 	derivedAddr, err := btcutil.NewAddressPubKeyHash(btcutil.Hash160(pubkeyData), chainCfg)
@@ -24,13 +25,13 @@ func VerifyPrivateKey(privateKey *btcec.PrivateKey, addr btcutil.Address, chainC
 		return nil, nil, err
 	}
 
-	if derivedAddr.EncodeAddress() != addr.EncodeAddress() {
+	if derivedAddr.EncodeAddress() != p2pkhAddr.EncodeAddress() {
 		pubkeyData = pubkey.SerializeUncompressed()
 		derivedAddr, err = btcutil.NewAddressPubKeyHash(btcutil.Hash160(pubkeyData), chainCfg)
 		if err != nil {
 			return nil, nil, err
 		}
-		if derivedAddr.EncodeAddress() != addr.EncodeAddress() {
+		if derivedAddr.EncodeAddress() != p2pkhAddr.EncodeAddress() {
 			return nil, nil, fmt.Errorf("private key does not match the address")
 		}
 	}
