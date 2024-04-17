@@ -12,8 +12,9 @@ import (
 
 type (
 	OpiClient struct {
-		endpoint string
-		config   config.OpiConfig
+		brc20Endpoint string
+		runesEndpoint string
+		config        config.OpiConfig
 	}
 
 	Response[T any] struct {
@@ -37,23 +38,57 @@ type (
 		AvailableBalance string `json:"available_balance"`
 		BlockHeight      int    `json:"block_height"`
 	}
+
+	RunesBalanceResponse struct {
+		Error         interface{}    `json:"error"`
+		Result        []RunesBalance `json:"result"`
+		DbBlockHeight int            `json:"db_block_height"`
+	}
+
+	RunesBalance struct {
+		Pkscript     string `json:"pkscript"`
+		WalletAddr   string `json:"wallet_addr"`
+		RuneID       string `json:"rune_id"`
+		RuneName     string `json:"rune_name"`
+		TotalBalance string `json:"total_balance"`
+	}
 )
 
+// Create a new OPI client and check if the API is live
 func NewOpiClient(c config.OpiConfig) *OpiClient {
-	endpoint := fmt.Sprintf("http://localhost:%s", c.Port)
-	resp, err := http.Get(endpoint + "/v1/brc20/ip")
-	if err != nil {
-		log.Fatal().Err(err).Msgf("error connecting to opi endpoint [%s]", endpoint)
+	if len(c.Brc20Port) == 0 {
+		panic("OPI_CONFIG_ERROR: BRC20 PORT UNDEFINED")
 	}
-	defer resp.Body.Close()
+	if len(c.RunesPort) == 0 {
+		panic("OPI_CONFIG_ERROR: RUNES PORT UNDEFINED")
+	}
 
-	if resp.StatusCode != http.StatusOK {
-		log.Fatal().Msgf("status error connecting to opi endpoint [%s]. status not 200", endpoint)
+	brc20Endpoint := fmt.Sprintf("http://localhost:%s", c.Brc20Port)
+	resp1, err := http.Get(brc20Endpoint + "/v1/brc20/ip")
+	if err != nil {
+		log.Fatal().Err(err).Msgf("error connecting brc20 to opi endpoint [%s]", brc20Endpoint)
+	}
+	defer resp1.Body.Close()
+
+	if resp1.StatusCode != http.StatusOK {
+		log.Fatal().Msgf("status error connecting to brc20 opi endpoint [%s]. status not 200, but [%d]", brc20Endpoint, resp1.StatusCode)
+	}
+
+	runesEndpoint := fmt.Sprintf("http://localhost:%s", c.RunesPort)
+	resp2, err := http.Get(runesEndpoint + "/v1/runes/ip")
+	if err != nil {
+		log.Fatal().Err(err).Msgf("error connecting runes to opi endpoint [%s]", brc20Endpoint)
+	}
+	defer resp2.Body.Close()
+
+	if resp2.StatusCode != http.StatusOK {
+		log.Fatal().Msgf("status error connecting to runes opi endpoint [%s]. status not 200", brc20Endpoint)
 	}
 
 	return &OpiClient{
-		endpoint: fmt.Sprintf("http://localhost:%s", c.Port),
-		config:   c,
+		brc20Endpoint: brc20Endpoint,
+		runesEndpoint: runesEndpoint,
+		config:        c,
 	}
 }
 
@@ -70,6 +105,7 @@ func getRequest(endpoint string) ([]byte, error) {
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
+		log.Info().Msgf("GET %s", string(endpoint))
 		log.Err(err).Msgf("http status not ok: [resp = %s]", string(bodyBytes))
 		return nil, err
 	}
@@ -77,7 +113,7 @@ func getRequest(endpoint string) ([]byte, error) {
 }
 
 func (c OpiClient) GetEventsByInscriptionId(inscriptionId string) ([]Brc20Event, error) {
-	endpoint := fmt.Sprintf("%s%s?inscription_id=%s", c.endpoint, c.config.Endpoints.FetchEventsByInscriptionId, inscriptionId)
+	endpoint := fmt.Sprintf("%s%s?inscription_id=%s", c.brc20Endpoint, c.config.Endpoints.FetchEventsByInscriptionId, inscriptionId)
 	data := Response[[]Brc20Event]{}
 	bodyBytes, err := getRequest(endpoint)
 	if err != nil {
@@ -91,8 +127,8 @@ func (c OpiClient) GetEventsByInscriptionId(inscriptionId string) ([]Brc20Event,
 	return data.Result, nil
 }
 
-func (c OpiClient) GetBalance(address, ticker string) (*Brc20Balance, error) {
-	endpoint := fmt.Sprintf("%s%s?address=%s&ticker=%s", c.endpoint, c.config.Endpoints.FetchBalance, address, ticker)
+func (c OpiClient) GetBrc20Balance(address, ticker string) (*Brc20Balance, error) {
+	endpoint := fmt.Sprintf("%s%s?address=%s&ticker=%s", c.brc20Endpoint, c.config.Endpoints.FetchBrc20Balance, address, ticker)
 	bodyBytes, err := getRequest(endpoint)
 	data := Response[Brc20Balance]{}
 	if err != nil {
@@ -103,4 +139,18 @@ func (c OpiClient) GetBalance(address, ticker string) (*Brc20Balance, error) {
 		return nil, err
 	}
 	return &data.Result, nil
+}
+
+func (c OpiClient) GetRunesBalance(address string) ([]RunesBalance, error) {
+	endpoint := fmt.Sprintf("%s%s?address=%s", c.runesEndpoint, c.config.Endpoints.FetchRunesBalance, address)
+	bodyBytes, err := getRequest(endpoint)
+	data := Response[[]RunesBalance]{}
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(bodyBytes, &data); err != nil {
+		log.Err(err).Msgf("error unmarshalling response: [resp = %s]", string(bodyBytes))
+		return nil, err
+	}
+	return data.Result, nil
 }

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/markkurossi/tabulate"
+	"github.com/ordinox/btc-service/client"
 	"github.com/ordinox/btc-service/config"
 	"github.com/ordinox/btc-service/runes"
 	"github.com/spf13/cobra"
@@ -17,6 +19,7 @@ func runesCmd(config config.Config) (cmd *cobra.Command) {
 	cmd.AddCommand(
 		mintRunesCmd(config),
 		transferRuneCmd(config),
+		runesBalanceCmd(config),
 	)
 	return
 }
@@ -70,5 +73,26 @@ func transferRuneCmd(config config.Config) (cmd *cobra.Command) {
 
 	_ = cmd.MarkFlagRequired("fee-rate")
 	_ = cmd.Flags().StringP("fee-rate", "f", "", "Fee rate for submitting transactions")
+	return
+}
+
+func runesBalanceCmd(c config.Config) (cmd *cobra.Command) {
+	cmd = &cobra.Command{
+		Use:    "balance ADDRESS",
+		PreRun: preRunForceArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			addr := parseBtcAddress(args[0], c)
+			opiClient := client.NewOpiClient(c.OpiConfig)
+			bal, err := opiClient.GetRunesBalance(addr.EncodeAddress())
+			if err != nil {
+				fmt.Println("error connecting to OPI Runes")
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			tab := tabulate.New(tabulate.ASCII)
+			_ = tabulate.Reflect(tab, 0, nil, bal)
+			tab.Print(os.Stdout)
+		},
+	}
 	return
 }

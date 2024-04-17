@@ -54,7 +54,7 @@ func getBalance(config config.OpiConfig) *cobra.Command {
 			if args[1] == "" {
 				return fmt.Errorf("address cannot be empty")
 			}
-			balance, err := client.NewOpiClient(config).GetBalance(args[1], args[0])
+			balance, err := client.NewOpiClient(config).GetBrc20Balance(args[1], args[0])
 			if err != nil {
 				return err
 			}

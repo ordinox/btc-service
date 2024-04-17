@@ -19,12 +19,14 @@ type (
 
 	OpiConfig struct {
 		Version   string       `mapstructure:"version"`
-		Port      string       `mapstructure:"port"`
+		Brc20Port string       `mapstructure:"brc20_port"`
 		Endpoints OpiEndpoints `mapstructure:"endpoints"`
+		RunesPort string       `mapstructure:"runes_port"`
 	}
 
 	OpiEndpoints struct {
 		FetchEventsByInscriptionId string `mapstructure:"fetch_evts_by_inscription_id"`
-		FetchBalance               string `mapstructure:"fetch_balance"`
+		FetchBrc20Balance          string `mapstructure:"fetch_brc20_balance"`
+		FetchRunesBalance          string `mapstructure:"fetch_runes_balance"`
 	}
 )
