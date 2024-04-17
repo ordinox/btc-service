@@ -75,7 +75,7 @@ func createMintScript(rune Rune) ([]byte, error) {
 	builder.AddOp(OP_RETURN)
 	builder.AddOp(OP_MAGIC)
 
-	data := TagToVarInt(MINT, rune.BlockNumber, rune.TxIndex)
+	data := TagToVarInt(MINT, rune.BlockNumber, uint64(rune.TxIndex))
 	builder.AddData(data)
 	return builder.Script()
 }

@@ -32,7 +32,7 @@ func ToVarInt(i uint64) []byte {
 func NewEdict(rune Rune, amount, output uint64) []byte {
 	data := make([]byte, 0)
 	data = append(data, ToVarInt(rune.BlockNumber)...)
-	data = append(data, ToVarInt(rune.TxIndex)...)
+	data = append(data, ToVarInt(uint64(rune.TxIndex))...)
 	data = append(data, ToVarInt(amount)...)
 	data = append(data, ToVarInt(output)...)
 	return data
