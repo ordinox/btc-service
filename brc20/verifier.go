@@ -6,6 +6,7 @@ import (
 	"github.com/ordinox/btc-service/config"
 )
 
+// Return the sender and reciever of a BRC20 transfer
 func VerifyBrc20Deposit(config config.Config, inscriptionId string) (string, string, error) {
 	// TODO: Add amount checking
 	client := client.NewOpiClient(config.OpiConfig)

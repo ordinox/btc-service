@@ -25,8 +25,9 @@ type (
 	}
 
 	OpiEndpoints struct {
-		FetchEventsByInscriptionId string `mapstructure:"fetch_evts_by_inscription_id"`
-		FetchBrc20Balance          string `mapstructure:"fetch_brc20_balance"`
-		FetchRunesBalance          string `mapstructure:"fetch_runes_balance"`
+		FetchEventsByInscriptionId      string `mapstructure:"fetch_brc20_evts_by_inscription_id"`
+		FetchRunesEventsByTransactionId string `mapstructure:"fetch_runes_evts_by_txid"`
+		FetchBrc20Balance               string `mapstructure:"fetch_brc20_balance"`
+		FetchRunesBalance               string `mapstructure:"fetch_runes_balance"`
 	}
 )

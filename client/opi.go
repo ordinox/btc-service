@@ -33,6 +33,15 @@ type (
 		SpentPkScript  string `json:"spent_pkScript,omitempty"`
 	}
 
+	RunesEvent struct {
+		EventType  string      `json:"event_type"`
+		Outpoint   interface{} `json:"outpoint"`
+		Pkscript   interface{} `json:"pkscript"`
+		WalletAddr interface{} `json:"wallet_addr"`
+		RuneID     string      `json:"rune_id"`
+		Amount     string      `json:"amount"`
+	}
+
 	Brc20Balance struct {
 		OverallBalance   string `json:"overall_balance"`
 		AvailableBalance string `json:"available_balance"`
@@ -152,5 +161,20 @@ func (c OpiClient) GetRunesBalance(address string) ([]RunesBalance, error) {
 		log.Err(err).Msgf("error unmarshalling response: [resp = %s]", string(bodyBytes))
 		return nil, err
 	}
+	return data.Result, nil
+}
+
+func (c OpiClient) GetRunesEventsByTxID(txId string) ([]RunesEvent, error) {
+	endpoint := fmt.Sprintf("%s%s?transaction_id=%s", c.runesEndpoint, c.config.Endpoints.FetchRunesEventsByTransactionId, txId)
+	data := Response[[]RunesEvent]{}
+	bodyBytes, err := getRequest(endpoint)
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(bodyBytes, &data); err != nil {
+		log.Err(err).Msgf("error unmarshalling response: [resp = %s]", string(bodyBytes))
+		return nil, err
+	}
+
 	return data.Result, nil
 }
