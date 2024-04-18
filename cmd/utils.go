@@ -84,7 +84,7 @@ func parseRune(runeStr string) runes.Rune {
 	}
 	return runes.Rune{
 		BlockNumber: uint64(blockNumber),
-		TxIndex:     uint64(txIdx),
+		TxIndex:     uint32(txIdx),
 	}
 }
 

@@ -104,7 +104,7 @@ func NewEdict(rune Rune, amount *big.Int, output uint64) []byte {
 	// data = append(data, encodeToSlice(big.NewInt(int64(output)))...)
 
 	data = append(data, ToVarInt(rune.BlockNumber)...)
-	data = append(data, ToVarInt(rune.TxIndex)...)
+	data = append(data, ToVarInt(uint64(rune.TxIndex))...)
 	data = append(data, AppendSleb128(nil, amount.Int64())...)
 	data = append(data, ToVarInt(output)...)
 	return data
