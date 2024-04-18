@@ -2,14 +2,16 @@ package runes
 
 import (
 	"fmt"
+	"math/big"
 
+	"github.com/btcsuite/btcd/wire"
 	"github.com/ordinox/btc-service/btc"
 	"github.com/ordinox/btc-service/client"
 	"github.com/ordinox/btc-service/common"
 	"github.com/ordinox/btc-service/config"
 )
 
-func TransferRune(rune Rune, amount uint64, addr btc.Address, toAddr btc.Address, privateKey btc.PrivateKey, feeRate uint64, config config.Config) (btc.Hash, error) {
+func TransferRune(rune Rune, amount *big.Int, addr btc.Address, toAddr btc.Address, privateKey btc.PrivateKey, feeRate uint64, config config.Config) (btc.Hash, error) {
 	addr, pubkeyData, err := common.VerifyPrivateKey(privateKey, addr, config.BtcConfig.GetChainConfigParams())
 	if err != nil {
 		return nil, err
@@ -32,14 +34,14 @@ func TransferRune(rune Rune, amount uint64, addr btc.Address, toAddr btc.Address
 	rawTx := btc.NewMsgTx(int32(btc.TxVersion))
 	tx := common.NewWrappedTx(rawTx, senderScript)
 
-	outTxId, err := btc.NewHashFromStr(utxo.TxID)
+	outTxId, _ := btc.NewHashFromStr(utxo.TxID)
 
 	outPoint := btc.NewOutPoint(outTxId, utxo.Vout)
 	txIn0 := btc.NewTxIn(outPoint, btc.DummySig, nil) // Dummy Sig used for gas estimation
 
 	tx.AddTxIn(txIn0)
 
-	transferScript, err := createTransferScript(rune, amount, 1)
+	transferScript, err := createTransferScript(rune, amount, 1, true)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +63,12 @@ func TransferRune(rune Rune, amount uint64, addr btc.Address, toAddr btc.Address
 	}
 
 	changeTxOut := btc.NewTxOut(change, senderScript)
+
+	// Reset TxOut
+	tx.TxOut = make([]*wire.TxOut, 0)
 	tx.AddTxOut(changeTxOut)
+	tx.AddTxOut(destTxOut)
+	tx.AddTxOut(transferTxOut)
 
 	if err := tx.SignP2PKH(privateKey, pubkeyData, 0); err != nil {
 		return nil, err
@@ -69,15 +76,16 @@ func TransferRune(rune Rune, amount uint64, addr btc.Address, toAddr btc.Address
 
 	client := client.NewBitcoinClient(config)
 	h, err := client.SendRawTransaction(tx.MsgTx, true)
-
-	return h, nil
+	return h, err
 }
 
 // TODO: Handle multiple edicts being sent in the same txn
-func createTransferScript(rune Rune, amount, output uint64) ([]byte, error) {
+func createTransferScript(rune Rune, amount *big.Int, output uint64, shouldInit bool) ([]byte, error) {
 	scriptBuilder := btc.NewScriptBuilder()
-	scriptBuilder.AddOp(OP_RETURN)
-	scriptBuilder.AddOp(OP_MAGIC)
+	if shouldInit {
+		scriptBuilder.AddOp(OP_RETURN)
+		scriptBuilder.AddOp(OP_MAGIC)
+	}
 
 	data := ToVarInt(BODY)
 	data = append(data, NewEdict(rune, amount, output)...)

@@ -56,7 +56,7 @@ func transferRuneCmd(config config.Config) (cmd *cobra.Command) {
 		Run: func(cmd *cobra.Command, args []string) {
 			feeRate := forceFeeRateFlag(cmd)
 			rune := parseRune(args[0])
-			amt := parseUint64(args[1])
+			amt := parseBigInt(args[1])
 			addr := parseBtcAddress(args[2], config)
 			toAddr := parseBtcAddress(args[3], config)
 			privKey := parsePrivateKey(args[4])
