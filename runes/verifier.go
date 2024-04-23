@@ -7,7 +7,7 @@ import (
 	"github.com/ordinox/btc-service/config"
 )
 
-// Return the sender and the receiver of a Runes transfer
+// Return the sender and the receiver addresses of a Runes transfer
 func VerifyRunesDeposit(config config.Config, txId string) (sender, receiver string, err error) {
 	client := client.NewOpiClient(config.OpiConfig)
 	events, err := client.GetRunesEventsByTxID(txId)

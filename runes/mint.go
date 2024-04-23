@@ -70,6 +70,7 @@ func MintRunes(rune Rune, addr btc.Address, privateKey btc.PrivateKey, feeRate u
 	return h, nil
 }
 
+// Create txout to mint the given rune
 func createMintScript(rune Rune) ([]byte, error) {
 	builder := btc.NewScriptBuilder()
 	builder.AddOp(OP_RETURN)

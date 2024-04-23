@@ -12,6 +12,7 @@ const (
 	OP_MAGIC  = txscript.OP_13
 )
 
+// RUNESTONE DATA PUSH CODES
 var (
 	MINT   uint64 = 20
 	BODY   uint64 = 0
@@ -50,6 +51,9 @@ func encodeULEB128(value *big.Int) []byte {
 	return result
 }
 
+// Varint encoder, ported from
+// https://github.com/ordinals/ord/blob/1e6cb641faf3b1eb0aba501a7a2822d7a3dc8643/crates/ordinals/src/varint.rs#L3-L39
+// Using big.Int since go doesn't support u128
 func encodeToSlice(n *big.Int) []byte {
 	var result []byte
 	var oneTwentyEight = big.NewInt(128)
@@ -60,24 +64,6 @@ func encodeToSlice(n *big.Int) []byte {
 		result = append(result, tempByte)
 		n.Div(n, oneTwentyEight)
 	}
-	result = append(result, byte(n.Uint64()))
-	return result
-}
-
-func encodeToSlice2(n *big.Int) []byte {
-	// Constant 128 and 127 are used for setting and checking the continuation bit.
-	continuationBit := big.NewInt(128)
-	mask := big.NewInt(127)
-	var result []byte
-
-	for n.Cmp(continuationBit) >= 0 {
-		temp := new(big.Int)
-		temp.And(n, mask)
-		tempByte := byte(temp.Uint64() | 0x80) // Set the continuation bit
-		result = append(result, tempByte)
-		n.Rsh(n, 7) // Right shift by 7 bits
-	}
-	// Add the last byte without the continuation bit
 	result = append(result, byte(n.Uint64()))
 	return result
 }
@@ -98,14 +84,15 @@ func ToVarInt(i uint64) []byte {
 func NewEdict(rune Rune, amount *big.Int, output uint64) []byte {
 	data := make([]byte, 0)
 
-	// data = append(data, encodeToSlice(big.NewInt(int64(rune.BlockNumber)))...)
-	// data = append(data, encodeToSlice(big.NewInt(int64(rune.TxIndex)))...)
-	// data = append(data, encodeToSlice(amount)...)
-	// data = append(data, encodeToSlice(big.NewInt(int64(1)))...)
+	data = append(data, encodeToSlice(big.NewInt(int64(rune.BlockNumber)))...)
+	data = append(data, encodeToSlice(big.NewInt(int64(rune.TxIndex)))...)
+	data = append(data, encodeToSlice(amount)...)
+	data = append(data, encodeToSlice(big.NewInt(int64(1)))...)
 
-	data = append(data, ToVarInt(rune.BlockNumber)...)
-	data = append(data, ToVarInt(uint64(rune.TxIndex))...)
-	data = append(data, AppendSleb128(nil, amount.Int64())...)
-	data = append(data, ToVarInt(output)...)
+	// Keep this for future reference & testing
+	// data = append(data, ToVarInt(rune.BlockNumber)...)
+	// data = append(data, ToVarInt(uint64(rune.TxIndex))...)
+	// data = append(data, AppendSleb128(nil, amount.Int64())...)
+	// data = append(data, ToVarInt(output)...)
 	return data
 }

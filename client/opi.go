@@ -10,59 +10,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type (
-	OpiClient struct {
-		brc20Endpoint string
-		runesEndpoint string
-		config        config.OpiConfig
-	}
-
-	Response[T any] struct {
-		Error  any `json:"error"`
-		Result T   `json:"result"`
-	}
-
-	Brc20Event struct {
-		Tick           string `json:"tick"`
-		Amount         string `json:"amount"`
-		SourceWallet   string `json:"source_wallet"`
-		SourcePkScript string `json:"source_pkScript"`
-		EventType      string `json:"event_type"`
-		UsingTxID      string `json:"using_tx_id,omitempty"`
-		SpentWallet    string `json:"spent_wallet,omitempty"`
-		SpentPkScript  string `json:"spent_pkScript,omitempty"`
-	}
-
-	RunesEvent struct {
-		EventType  string      `json:"event_type"`
-		Outpoint   interface{} `json:"outpoint"`
-		Pkscript   interface{} `json:"pkscript"`
-		WalletAddr interface{} `json:"wallet_addr"`
-		RuneID     string      `json:"rune_id"`
-		Amount     string      `json:"amount"`
-	}
-
-	Brc20Balance struct {
-		OverallBalance   string `json:"overall_balance"`
-		AvailableBalance string `json:"available_balance"`
-		BlockHeight      int    `json:"block_height"`
-	}
-
-	RunesBalanceResponse struct {
-		Error         interface{}    `json:"error"`
-		Result        []RunesBalance `json:"result"`
-		DbBlockHeight int            `json:"db_block_height"`
-	}
-
-	RunesBalance struct {
-		Pkscript     string `json:"pkscript"`
-		WalletAddr   string `json:"wallet_addr"`
-		RuneID       string `json:"rune_id"`
-		RuneName     string `json:"rune_name"`
-		TotalBalance string `json:"total_balance"`
-	}
-)
-
 func (r RunesBalance) Copy() *RunesBalance {
 	return &RunesBalance{
 		Pkscript:     r.Pkscript,
@@ -105,12 +52,13 @@ func NewOpiClient(c config.OpiConfig) *OpiClient {
 	}
 
 	return &OpiClient{
-		brc20Endpoint: brc20Endpoint,
-		runesEndpoint: runesEndpoint,
-		config:        c,
+		brc20Host: brc20Endpoint,
+		runesHost: runesEndpoint,
+		config:    c,
 	}
 }
 
+// HTTP GET request wrapper
 func getRequest(endpoint string) ([]byte, error) {
 	resp, err := http.Get(endpoint)
 	if err != nil {
@@ -131,8 +79,10 @@ func getRequest(endpoint string) ([]byte, error) {
 	return bodyBytes, nil
 }
 
+// Get all events by Inscription ID
+// Events prove if a BRC20 was transferred or not
 func (c OpiClient) GetEventsByInscriptionId(inscriptionId string) ([]Brc20Event, error) {
-	endpoint := fmt.Sprintf("%s%s?inscription_id=%s", c.brc20Endpoint, c.config.Endpoints.FetchEventsByInscriptionId, inscriptionId)
+	endpoint := fmt.Sprintf("%s%s?inscription_id=%s", c.brc20Host, c.config.Endpoints.FetchEventsByInscriptionId, inscriptionId)
 	data := Response[[]Brc20Event]{}
 	bodyBytes, err := getRequest(endpoint)
 	if err != nil {
@@ -146,8 +96,9 @@ func (c OpiClient) GetEventsByInscriptionId(inscriptionId string) ([]Brc20Event,
 	return data.Result, nil
 }
 
+// Get BRC20 balance
 func (c OpiClient) GetBrc20Balance(address, ticker string) (*Brc20Balance, error) {
-	endpoint := fmt.Sprintf("%s%s?address=%s&ticker=%s", c.brc20Endpoint, c.config.Endpoints.FetchBrc20Balance, address, ticker)
+	endpoint := fmt.Sprintf("%s%s?address=%s&ticker=%s", c.brc20Host, c.config.Endpoints.FetchBrc20Balance, address, ticker)
 	bodyBytes, err := getRequest(endpoint)
 	data := Response[Brc20Balance]{}
 	if err != nil {
@@ -160,8 +111,9 @@ func (c OpiClient) GetBrc20Balance(address, ticker string) (*Brc20Balance, error
 	return &data.Result, nil
 }
 
+// Get Runes Balance
 func (c OpiClient) GetRunesBalance(address string) ([]RunesBalance, error) {
-	endpoint := fmt.Sprintf("%s%s?address=%s", c.runesEndpoint, c.config.Endpoints.FetchRunesBalance, address)
+	endpoint := fmt.Sprintf("%s%s?address=%s", c.runesHost, c.config.Endpoints.FetchRunesBalance, address)
 	bodyBytes, err := getRequest(endpoint)
 	data := Response[[]RunesBalance]{}
 	if err != nil {
@@ -174,8 +126,9 @@ func (c OpiClient) GetRunesBalance(address string) ([]RunesBalance, error) {
 	return data.Result, nil
 }
 
+// Get Runes Events by TxID
 func (c OpiClient) GetRunesEventsByTxID(txId string) ([]RunesEvent, error) {
-	endpoint := fmt.Sprintf("%s%s?transaction_id=%s", c.runesEndpoint, c.config.Endpoints.FetchRunesEventsByTransactionId, txId)
+	endpoint := fmt.Sprintf("%s%s?transaction_id=%s", c.runesHost, c.config.Endpoints.FetchRunesEventsByTransactionId, txId)
 	data := Response[[]RunesEvent]{}
 	bodyBytes, err := getRequest(endpoint)
 	if err != nil {
@@ -186,5 +139,20 @@ func (c OpiClient) GetRunesEventsByTxID(txId string) ([]RunesEvent, error) {
 		return nil, err
 	}
 
+	return data.Result, nil
+}
+
+// Get all Rune UTXOs
+func (c OpiClient) GetRunesUnspentOutpoints(address string) ([]RunesUnspentOutput, error) {
+	endpoint := fmt.Sprintf("%s%s?address=%s", c.runesHost, c.config.Endpoints.FetchRunesUnspentOutpoint, address)
+	data := RunesResponseData[[]RunesUnspentOutput]{}
+	bodyBytes, err := getRequest(endpoint)
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(bodyBytes, &data); err != nil {
+		log.Err(err).Msgf("error unmarshalling response: [resp = %s]", string(bodyBytes))
+		return nil, err
+	}
 	return data.Result, nil
 }

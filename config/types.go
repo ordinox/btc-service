@@ -29,5 +29,6 @@ type (
 		FetchRunesEventsByTransactionId string `mapstructure:"fetch_runes_evts_by_txid"`
 		FetchBrc20Balance               string `mapstructure:"fetch_brc20_balance"`
 		FetchRunesBalance               string `mapstructure:"fetch_runes_balance"`
+		FetchRunesUnspentOutpoint       string `mapstructure:"fetch_runes_unspent_outpoints"` // These names have techincal meaning and are not to be changed
 	}
 )
