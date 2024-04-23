@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/hex"
 	"fmt"
+	"math/big"
 	"os"
 	"strconv"
 	"strings"
@@ -83,7 +84,7 @@ func parseRune(runeStr string) runes.Rune {
 	}
 	return runes.Rune{
 		BlockNumber: uint64(blockNumber),
-		TxIndex:     uint64(txIdx),
+		TxIndex:     uint32(txIdx),
 	}
 }
 
@@ -110,4 +111,13 @@ func parseString(str string) string {
 		os.Exit(1)
 	}
 	return str
+}
+
+func parseBigInt(str string) *big.Int {
+	val, ok := big.NewInt(0).SetString(str, 10)
+	if !ok {
+		fmt.Printf("Error: Invalid number string%s\n", str)
+		os.Exit(1)
+	}
+	return val
 }

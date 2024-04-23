@@ -8,6 +8,7 @@ import (
 	"github.com/ordinox/btc-service/config"
 )
 
+// Given a private key, derive all the obvious parameters for a P2TR transaction
 func CreateP2TRMetaData(privateKey *btcec.PrivateKey, config config.Config) (*P2TRMetadata, error) {
 	scriptBuilder := txscript.NewScriptBuilder()
 	scriptBuilder.

@@ -20,10 +20,10 @@ func Init() {
 		},
 		OpiConfig: OpiConfig{
 			Version: "0.3.0",
-			Port:    "8000",
+			Brc20Port:    "8000",
 			Endpoints: OpiEndpoints{
 				FetchEventsByInscriptionId: "/v1/brc20/event",
-				FetchBalance:               "/v1/brc20/get_current_balance_of_wallet",
+				FetchBrc20Balance:               "/v1/brc20/get_current_balance_of_wallet",
 			},
 		},
 	}
