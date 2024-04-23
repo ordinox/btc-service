@@ -63,6 +63,16 @@ type (
 	}
 )
 
+func (r RunesBalance) Copy() *RunesBalance {
+	return &RunesBalance{
+		Pkscript:     r.Pkscript,
+		WalletAddr:   r.WalletAddr,
+		RuneID:       r.RuneID,
+		RuneName:     r.RuneName,
+		TotalBalance: r.TotalBalance,
+	}
+}
+
 // Create a new OPI client and check if the API is live
 func NewOpiClient(c config.OpiConfig) *OpiClient {
 	if len(c.Brc20Port) == 0 {

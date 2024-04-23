@@ -6,6 +6,7 @@ import (
 
 	"github.com/markkurossi/tabulate"
 	"github.com/ordinox/btc-service/client"
+	"github.com/ordinox/btc-service/common"
 	"github.com/ordinox/btc-service/config"
 	"github.com/ordinox/btc-service/runes"
 	"github.com/spf13/cobra"
@@ -20,6 +21,7 @@ func runesCmd(config config.Config) (cmd *cobra.Command) {
 		mintRunesCmd(config),
 		transferRuneCmd(config),
 		runesBalanceCmd(config),
+		splitUtxoCmd(config),
 	)
 	return
 }
@@ -94,5 +96,37 @@ func runesBalanceCmd(c config.Config) (cmd *cobra.Command) {
 			tab.Print(os.Stdout)
 		},
 	}
+	return
+}
+
+func splitUtxoCmd(c config.Config) (cmd *cobra.Command) {
+	cmd = &cobra.Command{
+		Use:    "split ADDRESS PRIVATE_KEY OUT_COUNT OUT_VALUE",
+		PreRun: preRunForceArgs(4),
+		Run: func(cmd *cobra.Command, args []string) {
+			addr := parseBtcAddress(args[0], c)
+			privateKey := parsePrivateKey(args[1])
+			outCount := parseUint64(args[2])
+			outValue := parseUint64(args[3])
+			feeRate := forceFeeRateFlag(cmd)
+
+			utxo, err := common.SelectOneUtxo(addr.EncodeAddress(), outCount*outValue, c.BtcConfig)
+			if err != nil {
+				fmt.Println("error getting the requied UTXO")
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
+			h, err := runes.Split(addr, privateKey, common.BtcUnspent{*utxo}, outCount, outValue, uint64(feeRate), c)
+			if err != nil {
+				fmt.Println("error submitting txn")
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			fmt.Println((*h).String())
+		},
+	}
+	_ = cmd.MarkFlagRequired("fee-rate")
+	_ = cmd.Flags().StringP("fee-rate", "f", "", "Fee rate for submitting transactions")
 	return
 }

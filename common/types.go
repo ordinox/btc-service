@@ -30,6 +30,10 @@ func (w WebUtxos) ToUtxo() []Utxo {
 	return utxos
 }
 
+func (w WebUtxo) ToUtxo() Utxo {
+	return w
+}
+
 func (w WebUtxo) GetTxID() string {
 	return w.TxHash
 }

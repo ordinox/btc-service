@@ -66,8 +66,8 @@ func TransferRune(rune Rune, amount *big.Int, addr btc.Address, toAddr btc.Addre
 
 	// Reset TxOut
 	tx.TxOut = make([]*wire.TxOut, 0)
-	tx.AddTxOut(changeTxOut)
 	tx.AddTxOut(destTxOut)
+	tx.AddTxOut(changeTxOut)
 	tx.AddTxOut(transferTxOut)
 
 	if err := tx.SignP2PKH(privateKey, pubkeyData, 0); err != nil {
