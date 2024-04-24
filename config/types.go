@@ -19,9 +19,9 @@ type (
 
 	OpiConfig struct {
 		Version   string       `mapstructure:"version"`
-		Brc20Port string       `mapstructure:"brc20_port"`
+		Brc20Url  string       `mapstructure:"brc20_url"`
 		Endpoints OpiEndpoints `mapstructure:"endpoints"`
-		RunesPort string       `mapstructure:"runes_port"`
+		RunesUrl  string       `mapstructure:"runes_url"`
 	}
 
 	OpiEndpoints struct {
