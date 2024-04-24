@@ -7,22 +7,40 @@ import (
 	"github.com/ordinox/btc-service/config"
 )
 
-// Return the sender and the receiver addresses of a Runes transfer
-func VerifyRunesDeposit(config config.Config, txId string) (sender, receiver string, err error) {
-	client := client.NewOpiClient(config.OpiConfig)
+// Since "/event" api returns a UTXO and UTXOs can have multiple outputs, it's impossible to extract one receiver
+// Hence, this verifier requires sender, receiver & amountToVerify to ensure that the runes transfer has actually taken place
+// TODO: Check if the blockheight of txid and the blockheight of the scan
+func VerifyRunesDeposit(config config.Config, txId string, sender, receiver, amountToVerify string) error {
+	var (
+		client           = client.NewOpiClient(config.OpiConfig)
+		senderVerified   = false
+		receiverVerified = false
+	)
+
 	events, err := client.GetRunesEventsByTxID(txId)
 	if err != nil {
-		return "", "", err
+		return err
 	}
+
+	// Loop through all the outputs and check if Sender, Receiver & Amount matches the inputs
 	for _, evt := range events {
 		if evt.EventType == "input" && evt.WalletAddr != nil {
-			sender = evt.WalletAddr.(string)
-		} else if evt.EventType == "output" && evt.WalletAddr != nil {
-			receiver = evt.WalletAddr.(string)
+			senderVerified = true
+		} else if evt.EventType == "output" && evt.WalletAddr != nil && evt.Amount == amountToVerify && evt.WalletAddr.(string) == receiver {
+			receiverVerified = true
+		}
+		if senderVerified && receiverVerified {
+			return nil
 		}
 	}
-	if len(sender) == 0 || len(receiver) == 0 {
-		return "", "", fmt.Errorf("invalid runes transfer txid")
+
+	if !senderVerified {
+		return fmt.Errorf("[Runes Verifier] Could not verify sender")
 	}
-	return
+
+	if !receiverVerified {
+		return fmt.Errorf("[Runes Verifier] Could not verify receiver")
+	}
+
+	return nil
 }
