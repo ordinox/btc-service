@@ -28,6 +28,7 @@ func NewOpiClient(c config.OpiConfig) *OpiClient {
 	}
 	if len(c.RunesUrl) == 0 {
 		panic("OPI_CONFIG_ERROR: RUNES URL UNDEFINED")
+
 	}
 	if !strings.HasPrefix(c.Brc20Url, "http") {
 		panic("OPI_CONFIG_ERROR: BRC20 URL should have http(s) protocol defined")
@@ -38,6 +39,7 @@ func NewOpiClient(c config.OpiConfig) *OpiClient {
 
 	brc20Host, _ := strings.CutSuffix(c.Brc20Url, "/")
 	runesHost, _ := strings.CutSuffix(c.RunesUrl, "/")
+
 
 	// Make sure that these host are running
 	resp1, err := http.Get(brc20Host + "/v1/brc20/ip")
