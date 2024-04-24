@@ -22,6 +22,10 @@ func VerifyRunesDeposit(config config.Config, txId string, sender, receiver, amo
 		return err
 	}
 
+	if len(events) == 0 {
+		return fmt.Errorf("transaction not found")
+	}
+
 	// Loop through all the outputs and check if Sender, Receiver & Amount matches the inputs
 	for _, evt := range events {
 		if evt.EventType == "input" && evt.WalletAddr != nil {
