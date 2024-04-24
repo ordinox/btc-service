@@ -19,11 +19,11 @@ func Init() {
 			ElectrumProxy:  "http://localhost:6789",
 		},
 		OpiConfig: OpiConfig{
-			Version: "0.3.0",
-			Brc20Port:    "8000",
+			Version:  "0.3.0",
+			Brc20Url: "http://localhost:8000",
 			Endpoints: OpiEndpoints{
 				FetchEventsByInscriptionId: "/v1/brc20/event",
-				FetchBrc20Balance:               "/v1/brc20/get_current_balance_of_wallet",
+				FetchBrc20Balance:          "/v1/brc20/get_current_balance_of_wallet",
 			},
 		},
 	}
