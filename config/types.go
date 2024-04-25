@@ -4,6 +4,7 @@ type (
 	Config struct {
 		BtcConfig BtcConfig `mapstructure:"btc"`
 		OpiConfig OpiConfig `mapstructure:"opi"`
+		BISConfig BISConfig `mapstructure:"bis_config"`
 	}
 
 	BtcConfig struct {
@@ -30,5 +31,9 @@ type (
 		FetchBrc20Balance               string `mapstructure:"fetch_brc20_balance"`
 		FetchRunesBalance               string `mapstructure:"fetch_runes_balance"`
 		FetchRunesUnspentOutpoint       string `mapstructure:"fetch_runes_unspent_outpoints"` // These names have techincal meaning and are not to be changed
+	}
+
+	BISConfig struct {
+		APIKey string `mapstructure:"api_key"`
 	}
 )

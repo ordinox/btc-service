@@ -1,6 +1,7 @@
 package runes_test
 
 import (
+	"fmt"
 	"math/big"
 	"strconv"
 	"strings"
@@ -22,7 +23,7 @@ const TEST_PRIVATE_KEY = "37b4de3cdd51c013addf9c727be371b3a2258d457552798a767787
 const TEST_RUNE_ID = "310:1"
 
 // Transfer some runes into an arbitrary wallet and check balances
-func testTransfer(t *testing.T, amt int64) {
+func testTransfer(t *testing.T, amt int64, shouldVerify bool) {
 	config.Init()
 	// Init
 	var (
@@ -65,8 +66,12 @@ func testTransfer(t *testing.T, amt int64) {
 	rune, err := runes.ParseRune(senderRuneBalance.RuneID)
 	require.Nil(t, err)
 
-	_, err = runes.TransferRune(*rune, big.NewInt(amt), addr, destAddr, pk, 22, config)
+	hash, err := runes.TransferRune(*rune, big.NewInt(amt), addr, destAddr, pk, 22, config)
 	require.Nil(t, err)
+
+	if !shouldVerify {
+		return
+	}
 
 	// Check balance
 	err = cmd.GenerateBlocks()
@@ -117,6 +122,11 @@ func testTransfer(t *testing.T, amt int64) {
 
 	// Check if runes are added to the receiver
 	require.Equal(t, big.NewInt(0).Sub(receiverNewBalance, receiverPrevBalance).String(), big.NewInt(amt).String())
+
+	require.NotNil(t, big.NewInt(0).Sub(receiverNewBalance, receiverPrevBalance).String(), big.NewInt(amt).String())
+
+	err = runes.VerifyRunesDeposit(config, (*hash).String(), addr.EncodeAddress(), destAddr.EncodeAddress(), fmt.Sprintf("%d", amt))
+	require.Nil(t, err)
 }
 
 // Outputs given by OPI should be valid outpoints
@@ -149,18 +159,18 @@ func TestRunesOutpointFetch(t *testing.T) {
 
 func TestRunesTransfer(t *testing.T) {
 	t.Run("transfer 1 rune", func(t *testing.T) {
-		testTransfer(t, 1)
+		testTransfer(t, 1, true)
 	})
 	t.Run("transfer 2 rune", func(t *testing.T) {
-		testTransfer(t, 2)
+		testTransfer(t, 2, true)
 	})
 	t.Run("transfer 3 rune", func(t *testing.T) {
-		testTransfer(t, 3)
+		testTransfer(t, 3, true)
 	})
 	t.Run("transfer 4 rune", func(t *testing.T) {
-		testTransfer(t, 4)
+		testTransfer(t, 4, true)
 	})
 	t.Run("transfer 5 rune", func(t *testing.T) {
-		testTransfer(t, 5)
+		testTransfer(t, 5, true)
 	})
 }
