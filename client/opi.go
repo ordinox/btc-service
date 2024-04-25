@@ -73,15 +73,15 @@ func NewOpiClient(c config.OpiConfig) *OpiClient {
 		log.Fatal().Msgf("status error connecting to brc20 opi endpoint [%s]. status not 200, but [%d]", brc20Host, resp1.StatusCode)
 	}
 
-	resp2, err := http.Get(runesHost + "/v1/runes/ip")
-	if err != nil {
-		log.Fatal().Err(err).Msgf("error connecting runes to opi endpoint [%s]", brc20Host)
-	}
-	defer resp2.Body.Close()
-
-	if resp2.StatusCode != http.StatusOK {
-		log.Fatal().Msgf("status error connecting to runes opi endpoint [%s]. status not 200", brc20Host)
-	}
+	// resp2, err := http.Get(runesHost + "/v1/runes/ip")
+	// if err != nil {
+	// 	log.Fatal().Err(err).Msgf("error connecting runes to opi endpoint [%s]", brc20Host)
+	// }
+	// defer resp2.Body.Close()
+	//
+	// if resp2.StatusCode != http.StatusOK {
+	// 	log.Fatal().Msgf("status error connecting to runes opi endpoint [%s]. status not 200", brc20Host)
+	// }
 
 	return &OpiClient{
 		brc20Host: brc20Host,
