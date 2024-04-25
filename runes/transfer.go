@@ -14,7 +14,7 @@ import (
 )
 
 // Given a list of rune utxos, get the most appropirate utxo for a transfer
-func SelectRunesUnspentOutput(rune *Rune, amt *big.Int, utxos []client.RunesUnspentOutput) (*client.RunesUnspentOutput, error) {
+func SelectRunesUnspentOutput(rune *Rune, amt *big.Int, utxos []client.OPIRunesUnspentOutput) (*client.OPIRunesUnspentOutput, error) {
 	runeStr := rune.String()
 
 	for i, utxo := range utxos {

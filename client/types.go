@@ -65,11 +65,37 @@ type (
 		TotalBalance string `json:"total_balance"`
 	}
 
-	RunesUnspentOutput struct {
+	// OPI Runes Unspent Output
+	OPIRunesUnspentOutput struct {
 		Pkscript   string     `json:"pkscript"`
 		WalletAddr string     `json:"wallet_addr"`
 		Outpoint   string     `json:"outpoint"`
 		RuneIds    []string   `json:"rune_ids"`
 		Balances   []*big.Int `json:"balances"`
 	}
+
+	// BestInSlot Runes Unspent Output
+	BISRunesUnspentOutput struct {
+		Pkscript        string   `json:"pkscript"`
+		WalletAddr      string   `json:"wallet_addr"`
+		Output          string   `json:"output"`
+		RuneIds         []string `json:"rune_ids"`
+		Balances        []int64  `json:"balances"`
+		RuneNames       []string `json:"rune_names"`
+		SpacedRuneNames []string `json:"spaced_rune_names"`
+		Decimals        []int    `json:"decimals"`
+	}
+
+	BISResponseWrapper[T any] struct {
+		Data        T   `json:"data"`
+		BlockHeight int `json:"block_height"`
+	}
 )
+
+type RunesUnspentOutput interface {
+	GetPkScript() string
+	GetWalletAddr() string
+	GetOutpoint() string
+	GetRuneIds() []string
+	GetRuneNames() []string
+}

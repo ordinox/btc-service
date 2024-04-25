@@ -21,6 +21,28 @@ func (r RunesBalance) Copy() *RunesBalance {
 	}
 }
 
+var _ RunesUnspentOutput = OPIRunesUnspentOutput{}
+
+func (u OPIRunesUnspentOutput) GetPkScript() string {
+	return u.Pkscript
+}
+
+func (u OPIRunesUnspentOutput) GetWalletAddr() string {
+	return u.WalletAddr
+}
+
+func (u OPIRunesUnspentOutput) GetOutpoint() string {
+	return u.Outpoint
+}
+
+func (u OPIRunesUnspentOutput) GetRuneNames() []string {
+	return make([]string, 0)
+}
+
+func (u OPIRunesUnspentOutput) GetRuneIds() []string {
+	return u.RuneIds
+}
+
 // Create a new OPI client and check if the API is live
 func NewOpiClient(c config.OpiConfig) *OpiClient {
 	if len(c.Brc20Url) == 0 {
@@ -39,7 +61,6 @@ func NewOpiClient(c config.OpiConfig) *OpiClient {
 
 	brc20Host, _ := strings.CutSuffix(c.Brc20Url, "/")
 	runesHost, _ := strings.CutSuffix(c.RunesUrl, "/")
-
 
 	// Make sure that these host are running
 	resp1, err := http.Get(brc20Host + "/v1/brc20/ip")
@@ -154,9 +175,9 @@ func (c OpiClient) GetRunesEventsByTxID(txId string) ([]RunesEvent, error) {
 }
 
 // Get all Rune UTXOs
-func (c OpiClient) GetRunesUnspentOutpoints(address string) ([]RunesUnspentOutput, error) {
+func (c OpiClient) GetRunesUnspentOutpoints(address string) ([]OPIRunesUnspentOutput, error) {
 	endpoint := fmt.Sprintf("%s%s?address=%s", c.runesHost, c.config.Endpoints.FetchRunesUnspentOutpoint, address)
-	data := RunesResponseData[[]RunesUnspentOutput]{}
+	data := RunesResponseData[[]OPIRunesUnspentOutput]{}
 	bodyBytes, err := getRequest(endpoint)
 	if err != nil {
 		return nil, err
