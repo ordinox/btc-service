@@ -102,7 +102,7 @@ func inscribeMintCmd(config config.Config) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			feeRate := forceFeeRateFlag(cmd)
 			ticker := parseTicker(args[0])
-			amt := parseUint64(args[1])
+			amt := parseBigFloat(args[1])
 			addr := parseBtcAddress(args[2], config)
 			privateKey := parsePrivateKey(args[3])
 			insc, err := brc20.InscribeMint(ticker, amt, addr, privateKey, uint64(feeRate), config)
@@ -129,7 +129,7 @@ func inscribeTransferCmd(config config.Config) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			feeRate := forceFeeRateFlag(cmd)
 			ticker := parseTicker(args[0])
-			amt := parseUint64(args[1])
+			amt := parseBigFloat(args[1])
 			addr := parseBtcAddress(args[2], config)
 			privateKey := parsePrivateKey(args[3])
 

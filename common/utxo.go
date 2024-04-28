@@ -39,7 +39,7 @@ func SelectOneUtxo(addr string, minValue uint64, config config.BtcConfig) (*btcj
 	}
 
 	if len(utxos.Result) == 0 {
-		return nil, fmt.Errorf("no utxos available")
+		return nil, fmt.Errorf("no utxos available for addr=%s", addr)
 	}
 
 	for _, utxo := range utxos.Result {

@@ -113,10 +113,19 @@ func parseString(str string) string {
 	return str
 }
 
+func parseBigFloat(str string) *big.Float {
+	val, ok := big.NewFloat(0).SetString(str)
+	if !ok {
+		fmt.Printf("Error: Invalid bigFloat: %s\n", str)
+		os.Exit(1)
+	}
+	return val
+}
+
 func parseBigInt(str string) *big.Int {
 	val, ok := big.NewInt(0).SetString(str, 10)
 	if !ok {
-		fmt.Printf("Error: Invalid number string%s\n", str)
+		fmt.Printf("Error: Invalid bigInt: %s\n", str)
 		os.Exit(1)
 	}
 	return val
