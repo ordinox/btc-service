@@ -2,7 +2,7 @@ package brc20
 
 import (
 	"encoding/json"
-	"fmt"
+	"math/big"
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcutil"
@@ -18,12 +18,12 @@ type mint struct {
 	Amt  string `json:"amt"`
 }
 
-func InscribeMint(ticker string, cap uint64, destination btcutil.Address, privateKey *btcec.PrivateKey, feeRate uint64, config config.Config) (*inscriptions.SingleInscriptionResult, error) {
+func InscribeMint(ticker string, amt *big.Float, destination btcutil.Address, privateKey *btcec.PrivateKey, feeRate uint64, config config.Config) (*inscriptions.SingleInscriptionResult, error) {
 	mint := mint{
 		P:    "brc-20",
 		Op:   "mint",
 		Tick: ticker,
-		Amt:  fmt.Sprintf("%d", cap),
+		Amt:  amt.String(),
 	}
 
 	bz, _ := json.Marshal(mint)

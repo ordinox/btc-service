@@ -7,6 +7,7 @@ package brc20
 import (
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"strings"
 	"time"
 
@@ -31,7 +32,7 @@ type transfer struct {
 }
 
 // Inscribe a "transfer inscription" into the "destination" address
-func InscribeTransfer(ticker string, amt uint64, destination btcutil.Address, privateKey *btcec.PrivateKey, feeRate uint64, config config.Config) (*inscriptions.SingleInscriptionResult, error) {
+func InscribeTransfer(ticker string, amt *big.Float, destination btcutil.Address, privateKey *btcec.PrivateKey, feeRate uint64, config config.Config) (*inscriptions.SingleInscriptionResult, error) {
 	transfer := transfer{
 		P:    "brc-20",
 		Op:   "transfer",
@@ -179,7 +180,7 @@ func Transfer(cUtxo, iUtxo common.Utxo, senderAddr, destAddr btcutil.Address, se
 // Transferring the Transfer Inscription from the "from" address to the "to" address
 // Note: inscriberPrivateKey's P2TR address needs to have UTXOs for inscribing a transfer inscription
 // And, "from" address should be P2PKH address
-func SendBrc20(ticker string, from, to btcutil.Address, amt, feeRate uint64, inscriberPrivateKey, senderPrivateKey *btcec.PrivateKey, config config.Config) (inscriptionId, hash string, err error) {
+func SendBrc20(ticker string, from, to btcutil.Address, amt *big.Float, feeRate uint64, inscriberPrivateKey, senderPrivateKey *btcec.PrivateKey, config config.Config) (inscriptionId, hash string, err error) {
 	res, err := InscribeTransfer(ticker, amt, from, inscriberPrivateKey, feeRate, config)
 	if err != nil {
 		return "", "", err

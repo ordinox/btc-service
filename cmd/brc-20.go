@@ -27,7 +27,7 @@ func e2eCmd(config config.Config) *cobra.Command {
 
 			feeRate := forceFeeRateFlag(cmd)
 			ticker := parseTicker(args[0])
-			amt := parseUint64(args[1])
+			amt := parseBigFloat(args[1])
 			fromAddr := parseBtcAddress(args[2], config)
 			toAddr := parseBtcAddress(args[3], config)
 			inscriberPrivateKey := parsePrivateKey(args[4])
@@ -111,13 +111,13 @@ func sendBrc20Cmd(config config.Config) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			feeRate := forceFeeRateFlag(cmd)
 			ticker := parseTicker(args[0])
-			amt := parseUint64(args[1])
+			amt := parseBigFloat(args[1])
 			fromAddr := parseBtcAddress(args[2], config)
 			toAddr := parseBtcAddress(args[3], config)
 			inscriberPrivateKey := parsePrivateKey(args[4])
 			senderPrivateKey := parsePrivateKey(args[5])
 
-			inscriptionId, hash, err := brc20.SendBrc20(ticker, fromAddr, toAddr, uint64(amt), uint64(feeRate), inscriberPrivateKey, senderPrivateKey, config)
+			inscriptionId, hash, err := brc20.SendBrc20(ticker, fromAddr, toAddr, amt, uint64(feeRate), inscriberPrivateKey, senderPrivateKey, config)
 			if err != nil {
 				fmt.Println("Error occured while transferring")
 				fmt.Println(err.Error())
