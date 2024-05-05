@@ -32,7 +32,7 @@ func InscribeNative(
 	if err != nil {
 		return nil, fmt.Errorf("error deriving taproot addresss, %s", err.Error())
 	}
-	utxo, err := common.SelectOneUtxo(fromAddr.EncodeAddress(), 1000, config.BtcConfig)
+	utxo, err := common.SelectOneUtxo(fromAddr.EncodeAddress(), 5000, config.BtcConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error selecting utxo, %s", err.Error())
 	}
@@ -75,7 +75,8 @@ func InscribeNative(
 
 	fee := btc.Amount(btc.GetTxVSize(btc.NewTx(commitTx)) * int64(feeRate))
 	payForward := fee + 546
-	changeAmount := totalSenderAmt - fee - payForward - 100 // 100 is the buffer amt to get the commit tx before the reveal tx
+	cost := fee + payForward + 100
+	changeAmount := totalSenderAmt - (cost) // 100 is the buffer amt to get the commit tx before the reveal tx
 
 	if changeAmount < 1 {
 		return nil, fmt.Errorf("selected UTXO has insufficient balance, %d", changeAmount)
