@@ -78,7 +78,7 @@ func InscribeNative(
 	changeAmount := totalSenderAmt - fee - payForward - 100 // 100 is the buffer amt to get the commit tx before the reveal tx
 
 	if changeAmount < 1 {
-		return nil, fmt.Errorf("selected UTXO has insufficient balance, %s", err.Error())
+		return nil, fmt.Errorf("selected UTXO has insufficient balance, %d", changeAmount)
 	}
 
 	// Update the inscription txout value to the payforward value
