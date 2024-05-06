@@ -37,7 +37,7 @@ func InscribeTransfer(ticker string, amt *big.Float, destination btcutil.Address
 		P:    "brc-20",
 		Op:   "transfer",
 		Tick: ticker,
-		Amt:  amt.String(),
+		Amt:  amt.Text('f', 4),
 	}
 	bz, _ := json.Marshal(transfer)
 	inscription := taproot.NewInscriptionData(string(bz), taproot.ContentTypeText)

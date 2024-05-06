@@ -23,7 +23,7 @@ func InscribeMint(ticker string, amt *big.Float, destination btcutil.Address, pr
 		P:    "brc-20",
 		Op:   "mint",
 		Tick: ticker,
-		Amt:  amt.String(),
+		Amt:  amt.Text('f', 4),
 	}
 
 	bz, _ := json.Marshal(mint)
