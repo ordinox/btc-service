@@ -90,6 +90,22 @@ type (
 		Data        T   `json:"data"`
 		BlockHeight int `json:"block_height"`
 	}
+
+	BISBrc20Event struct {
+		InscriptionID string `json:"inscription_id"`
+		EventType     string `json:"event_type"`
+		Event         struct {
+			Tick            string `json:"tick"`
+			Amount          string `json:"amount"`
+			UsingTxID       string `json:"using_tx_id"`
+			SpentWallet     string `json:"spent_wallet"`
+			SourceWallet    string `json:"source_wallet"`
+			SpentPkScript   string `json:"spent_pkScript"`
+			SourcePkScript  string `json:"source_pkScript"`
+			Price           int    `json:"price"`
+			MarketplaceType string `json:"marketplace_type"`
+		} `json:"event"`
+	}
 )
 
 type RunesUnspentOutput interface {

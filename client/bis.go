@@ -46,7 +46,7 @@ func NewBISClient(c config.BISConfig) *BISClient {
 	return &BISClient{"https://api.bestinslot.xyz", c.APIKey}
 }
 
-func authenticatedGetRequest(endpoint, headerKey, headerValue string) ([]byte, error) {
+func authenticatedBisGetRequest(endpoint, headerKey, headerValue string) ([]byte, error) {
 	client := &http.Client{}
 
 	req, err := http.NewRequest("GET", endpoint, nil)
@@ -76,10 +76,25 @@ func authenticatedGetRequest(endpoint, headerKey, headerValue string) ([]byte, e
 	return bodyBytes, nil
 }
 
+// Get all brc20 events with the given transaction ID
+func (b BISClient) GetEventsByTransactionId(txId string) ([]BISBrc20Event, error) {
+	endpoint := "https://api.bestinslot.xyz/v3/brc20/event_from_txid?=" + txId
+	res, err := authenticatedBisGetRequest(endpoint, "x-api-key", b.apiKey)
+	if err != nil {
+		return nil, err
+	}
+	bisResponse := BISResponseWrapper[[]BISBrc20Event]{}
+	if err := json.Unmarshal(res, &bisResponse); err != nil {
+		log.Err(err).Msgf("error unmarshalling response: [resp = %s]", string(res))
+		return nil, err
+	}
+	return bisResponse.Data, nil
+}
+
 // Fetch runes UTXOs from BIS API
 func (b BISClient) FetchRunesUtxos(address string) ([]RunesUnspentOutput, error) {
 	endpoint := fmt.Sprintf("%s/v3/runes/wallet_valid_outputs?address=%s&order=asc&offset=0&count=2000&sort_by=output", b.baseUrl, address)
-	res, err := authenticatedGetRequest(endpoint, "x-api-key", b.apiKey)
+	res, err := authenticatedBisGetRequest(endpoint, "x-api-key", b.apiKey)
 	if err != nil {
 		return nil, err
 	}
