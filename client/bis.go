@@ -77,8 +77,8 @@ func authenticatedBisGetRequest(endpoint, headerKey, headerValue string) ([]byte
 }
 
 // Get all brc20 events with the given transaction ID
-func (b BISClient) GetEventsByTransactionId(txId string) ([]BISBrc20Event, error) {
-	endpoint := "https://api.bestinslot.xyz/v3/brc20/event_from_txid?=" + txId
+func (b BISClient) GetEventsByTransactionId(txId string) (*BISResponseWrapper[[]BISBrc20Event], error) {
+	endpoint := "https://api.bestinslot.xyz/v3/brc20/event_from_txid?txid=" + txId
 	res, err := authenticatedBisGetRequest(endpoint, "x-api-key", b.apiKey)
 	if err != nil {
 		return nil, err
@@ -88,7 +88,7 @@ func (b BISClient) GetEventsByTransactionId(txId string) ([]BISBrc20Event, error
 		log.Err(err).Msgf("error unmarshalling response: [resp = %s]", string(res))
 		return nil, err
 	}
-	return bisResponse.Data, nil
+	return &bisResponse, nil
 }
 
 // Fetch runes UTXOs from BIS API

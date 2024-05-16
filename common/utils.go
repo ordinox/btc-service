@@ -3,6 +3,9 @@ package common
 import (
 	"encoding/hex"
 	"fmt"
+	"math"
+	"math/big"
+	"strconv"
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcutil"
@@ -43,4 +46,20 @@ func VerifyPrivateKey(privateKey *btcec.PrivateKey, p2pkhAddr btcutil.Address, c
 		}
 	}
 	return derivedAddr, pubkeyData, nil
+}
+
+// Given a token value in big int, parse use the decimals provided to make it into a float64
+func ParseStringFloat64(amtStr string, decInt int) (float64, error) {
+	amt, ok := new(big.Int).SetString(amtStr, 10)
+	if !ok {
+		return 0, fmt.Errorf("invalid amount string")
+	}
+	amtF := new(big.Float).SetInt(amt)
+	dec := new(big.Float).SetFloat64(math.Pow10(decInt))
+	ans := new(big.Float).Quo(amtF, dec)
+	f, err := strconv.ParseFloat(ans.Text('f', 4), 64)
+	if err != nil {
+		return 0, err
+	}
+	return f, nil
 }

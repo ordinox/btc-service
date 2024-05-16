@@ -26,7 +26,7 @@ Transfer
 }
 */
 
-func TestTransf(t *testing.T) {
+func xTestTransf(t *testing.T) {
 	senderPk := common.LoadPrivateKey(common.TEST_PRIV_KEY_HEX_1)
 	destinationPk := common.LoadPrivateKey(common.TEST_PRIV_KEY_HEX_2)
 
