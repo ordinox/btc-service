@@ -11,6 +11,11 @@ import (
 )
 
 func GetUtxos(address string, config config.BtcConfig) (*WebUtxoResponse, error) {
+	// Use Sandshrew when possible
+	if config.SandshrewApiKey != "" {
+		return GetEsploraUtxos(address, config)
+	}
+
 	url := fmt.Sprintf("%s/getunspent?address=%s&network=%s", config.ElectrumProxy, address, config.GetChainConfigParams().Name)
 	resp, err := http.Get(url)
 	if err != nil {
