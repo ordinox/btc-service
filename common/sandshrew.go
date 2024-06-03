@@ -34,7 +34,7 @@ func GetEsploraUtxos(address string, config config.BtcConfig) (*WebUtxoResponse,
 		"jsonrpc": "2.0",
 		"id":      1,
 		"method":  "esplora_address::utxo",
-		"params":  []string{"bc1q90ly9f57xa6349nhdjq4zwguq4w2rdrqgfgtd7"},
+		"params":  []string{address},
 	}
 
 	jsonPayload, err := json.Marshal(payload)
