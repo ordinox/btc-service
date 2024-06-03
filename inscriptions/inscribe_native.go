@@ -149,7 +149,7 @@ func InscribeNative(
 
 	h1, err := client.SendRawTransaction(commitTx, true)
 	if err != nil {
-		return nil, fmt.Errorf("error sending commit tx, %s", err.Error())
+		return nil, fmt.Errorf("error sending commit tx, address=%s utxo_txid=%s utxo_vout=%d err=%s", fromAddr.String(), utxo.TxID, utxo.Vout, err.Error())
 	}
 	fmt.Println("Commit Tx:", (*h1).String())
 
