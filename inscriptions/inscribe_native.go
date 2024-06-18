@@ -61,7 +61,7 @@ func InscribeNative(
 
 	commitTx.AddTxIn(in)
 
-	inscriptionMetaData, err := taproot.CreateP2TRInscriptionMetaData(inscriptionData, privateKey, config)
+	inscriptionMetaData, err := taproot.CreateP2TRInscriptionMetaData(inscriptionData, privateKey.PubKey(), config)
 	if err != nil {
 		return nil, fmt.Errorf("error creating inscription meta data, %s", err.Error())
 	}

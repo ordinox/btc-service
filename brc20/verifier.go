@@ -2,7 +2,6 @@ package brc20
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/ordinox/btc-service/client"
@@ -11,8 +10,8 @@ import (
 )
 
 var (
-	ErrNoEventsFound        = fmt.Errorf("no events found")
-	ErrInvalidBrc20Transfer = fmt.Errorf("error verifying brc20 transfer")
+	ErrNoEventsFound        = errors.New("no events found")
+	ErrInvalidBrc20Transfer = errors.New("error verifying brc20 transfer")
 )
 
 // Return the sender and reciever of a BRC20 transfer
