@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -37,6 +38,10 @@ func (u BISRunesUnspentOutput) GetRuneNames() []string {
 	return u.RuneNames
 }
 
+var (
+	ErrApiBadGateway = errors.New("error bad gateway")
+)
+
 type BISRunesUnspentOutputList = []BISRunesUnspentOutput
 
 func NewBISClient(c config.BISConfig) *BISClient {
@@ -68,6 +73,11 @@ func authenticatedBisGetRequest(endpoint, headerKey, headerValue string) ([]byte
 		log.Err(err).Msg("error reading msg body")
 		return nil, err
 	}
+	if resp.StatusCode >= 500 {
+		log.Err(err).Msg("error bestinslot api bad gateway")
+		return nil, fmt.Errorf("BIS bad gateway: %w", ErrApiBadGateway)
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		log.Info().Msgf("GET %s", string(endpoint))
 		log.Err(err).Msgf("http status not ok: [resp = %s]", string(bodyBytes))
