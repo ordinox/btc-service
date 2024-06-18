@@ -8,10 +8,10 @@ import (
 	"github.com/ordinox/btc-service/config"
 )
 
-func CreateP2TRInscriptionMetaData(inscription InscriptionData, privateKey *btcec.PrivateKey, config config.Config) (*P2TRMetadata, error) {
+func CreateP2TRInscriptionMetaData(inscription InscriptionData, publicKey *btcec.PublicKey, config config.Config) (*P2TRMetadata, error) {
 	scriptBuilder := txscript.NewScriptBuilder()
 	scriptBuilder.
-		AddData(schnorr.SerializePubKey(privateKey.PubKey())).
+		AddData(schnorr.SerializePubKey(publicKey)).
 		AddOp(txscript.OP_CHECKSIG).
 		AddOp(txscript.OP_FALSE).
 		AddOp(txscript.OP_IF).
@@ -38,7 +38,7 @@ func CreateP2TRInscriptionMetaData(inscription InscriptionData, privateKey *btce
 		TapLeaf:  leafNode,
 		RootNode: leafNode,
 	}
-	controlBlock := proof.ToControlBlock(privateKey.PubKey())
+	controlBlock := proof.ToControlBlock(publicKey)
 	controlBlockWitness, err := controlBlock.ToBytes()
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func CreateP2TRInscriptionMetaData(inscription InscriptionData, privateKey *btce
 	address, err := btcutil.NewAddressTaproot(
 		schnorr.SerializePubKey(
 			txscript.ComputeTaprootOutputKey(
-				privateKey.PubKey(),
+				publicKey,
 				tapHash[:],
 			),
 		),
