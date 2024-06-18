@@ -2,6 +2,7 @@ package brc20
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/ordinox/btc-service/client"
@@ -48,7 +49,7 @@ func VerifyBrc20TransferV2(config config.Config, data VerifyBrc20DepositData) er
 			return err
 		}
 		if len(events.Data) == 0 {
-			return ErrNoEventsFound
+			return fmt.Errorf("no events yet %w", ErrNoEventsFound)
 		}
 		for _, evt := range events.Data {
 			if evt.EventType != "transfer-transfer" {
@@ -74,7 +75,7 @@ func VerifyBrc20TransferV2(config config.Config, data VerifyBrc20DepositData) er
 			return nil
 		}
 
-		return ErrInvalidBrc20Transfer
+		return fmt.Errorf("invalid transfer %w", ErrInvalidBrc20Transfer)
 	} else {
 		client := client.NewOpiClient(config.OpiConfig)
 		events, err := client.GetEventsByInscriptionId(data.InscriptionId)
