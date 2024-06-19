@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/btcsuite/btcd/rpcclient"
@@ -14,19 +15,34 @@ type BtcRpcClient struct {
 }
 
 func NewBitcoinClient(config config.Config) *BtcRpcClient {
+	host := config.BtcConfig.GetRpcHostWithWallet()
+	cookiePath := config.BtcConfig.CookiePath
+	user := ""
+	pass := ""
+	if config.BtcConfig.SandshrewApiKey != "" {
+		host = fmt.Sprintf("%s/%s", "mainnet.sandshrew.io/v1", config.BtcConfig.SandshrewApiKey)
+		cookiePath = ""
+		user = "user"
+		pass = "pass"
+	}
+
 	connConfig := &rpcclient.ConnConfig{
-		Host:         config.BtcConfig.GetRpcHostWithWallet(),
+		Host:         host,
 		HTTPPostMode: true, // Bitcoin Core
 		DisableTLS:   true,
-		CookiePath:   config.BtcConfig.CookiePath,
+		CookiePath:   cookiePath,
+		User:         user,
+		Pass:         pass,
 	}
 	client, err := rpcclient.New(connConfig, nil)
 	if err != nil {
 		log.Fatal().Err(err).Msg("unable to create btc rpc client")
 	}
-	if _, err := client.LoadWallet(config.BtcConfig.WalletName); err != nil {
-		if !strings.Contains(err.Error(), "already loaded") {
-			log.Fatal().Err(err).Msgf("error loading wallet: %s", config.BtcConfig.WalletName)
+	if config.BtcConfig.SandshrewApiKey == "" {
+		if _, err := client.LoadWallet(config.BtcConfig.WalletName); err != nil {
+			if !strings.Contains(err.Error(), "already loaded") {
+				log.Fatal().Err(err).Msgf("error loading wallet: %s", config.BtcConfig.WalletName)
+			}
 		}
 	}
 	return &BtcRpcClient{
