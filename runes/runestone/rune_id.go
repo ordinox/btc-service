@@ -19,6 +19,10 @@ func (r RuneId) IsEmpty() bool {
 	return r.Block == 0 && r.Tx == 0
 }
 
+func (r RuneId) Equals(r2 RuneId) bool {
+	return r.Tx == r2.Tx && r.Block == r2.Block
+}
+
 func (u Uint32) To64() *big.Int {
 	return new(big.Int).SetUint64(uint64(u))
 }
