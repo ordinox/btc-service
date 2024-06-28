@@ -48,7 +48,6 @@ func SelectOneUtxo(addr string, minValue uint64, config config.BtcConfig) (*btcj
 	}
 
 	for _, utxo := range utxos.Result {
-		fmt.Println(utxo.Value, "~", minValue)
 		if utxo.Value < minValue {
 			continue
 		}
