@@ -60,6 +60,10 @@ func VerifyRunesDeposit(request RunesDepositRequest, cfg config.Config) (bool, e
 		if len(msgTx.TxIn) < 1 {
 			return false, fmt.Errorf("invalid vin length: %w", ErrInvalidRunestone)
 		}
+
+		if !e.Id.Equals(request.RuneId) {
+			continue
+		}
 		if e.Amount.Cmp(request.Amount) != 0 {
 			continue
 		}
