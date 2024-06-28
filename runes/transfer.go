@@ -105,7 +105,7 @@ func TransferRune(rune Rune, amount *big.Int, addr btc.Address, toAddr btc.Addre
 	}
 
 	// Runestone script
-	transferScript, err := createTransferScript(rune, amount, 1, true)
+	transferScript, err := CreateTransferScript(rune, amount, 1, true)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +152,7 @@ func TransferRune(rune Rune, amount *big.Int, addr btc.Address, toAddr btc.Addre
 
 // Create txout script which contains the runestone
 // TODO: Handle multiple edicts being sent in the same txn
-func createTransferScript(rune Rune, amount *big.Int, output uint64, shouldInit bool) ([]byte, error) {
+func CreateTransferScript(rune Rune, amount *big.Int, output uint64, shouldInit bool) ([]byte, error) {
 	scriptBuilder := btc.NewScriptBuilder()
 	if shouldInit {
 		scriptBuilder.AddOp(OP_RETURN)
