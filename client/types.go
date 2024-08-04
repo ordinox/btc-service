@@ -2,6 +2,7 @@ package client
 
 import (
 	"math/big"
+	"time"
 
 	"github.com/ordinox/btc-service/config"
 )
@@ -105,6 +106,27 @@ type (
 			Price           int    `json:"price"`
 			MarketplaceType string `json:"marketplace_type"`
 		} `json:"event"`
+	}
+
+	BISRuneEvent struct {
+		EventType      string    `json:"event_type"`
+		Txid           string    `json:"txid"`
+		Outpoint       string    `json:"outpoint"`
+		Pkscript       string    `json:"pkscript"`
+		WalletAddr     string    `json:"wallet_addr"`
+		RuneID         string    `json:"rune_id"`
+		Amount         string    `json:"amount"`
+		BlockHeight    int       `json:"block_height"`
+		BlockTimestamp time.Time `json:"block_timestamp"`
+		RuneName       string    `json:"rune_name"`
+		SpacedRuneName string    `json:"spaced_rune_name"`
+		Decimals       int       `json:"decimals"`
+		SaleInfo       struct {
+			SalePrice        int    `json:"sale_price"`
+			SoldToPkscript   string `json:"sold_to_pkscript"`
+			SoldToWalletAddr string `json:"sold_to_wallet_addr"`
+			Marketplace      string `json:"marketplace"`
+		} `json:"sale_info"`
 	}
 )
 

@@ -21,6 +21,7 @@ type RuneTx struct {
 	Senders []btcutil.Address
 }
 
+// Test rune balance
 func TestEdicts(t *testing.T) {
 	config.Init()
 	config := config.GetDefaultConfig()

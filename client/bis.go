@@ -122,3 +122,17 @@ func (b BISClient) FetchRunesUtxos(address string) ([]RunesUnspentOutput, error)
 
 	return data, nil
 }
+
+func (b BISClient) GetRunesEventsByTxID(txId string) (*BISResponseWrapper[[]BISRuneEvent], error) {
+	endpoint := "https://api.bestinslot.xyz/v3/runes/events_on_tx?txid=" + txId
+	res, err := authenticatedBisGetRequest(endpoint, "x-api-key", b.apiKey)
+	if err != nil {
+		return nil, err
+	}
+	bisResponse := BISResponseWrapper[[]BISRuneEvent]{}
+	if err := json.Unmarshal(res, &bisResponse); err != nil {
+		log.Err(err).Msgf("error unmarshalling response: [resp = %s]", string(res))
+		return nil, err
+	}
+	return &bisResponse, nil
+}
